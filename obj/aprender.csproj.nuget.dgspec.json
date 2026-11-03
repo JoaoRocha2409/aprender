@@ -1,36 +1,30 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\João Vitor\\Desktop\\aprender\\aprender\\aprender.csproj": {}
+    "C:\\Users\\forgo\\trabalho euller\\aprender\\aprender.csproj": {}
   },
   "projects": {
-    "C:\\Users\\João Vitor\\Desktop\\aprender\\aprender\\aprender.csproj": {
+    "C:\\Users\\forgo\\trabalho euller\\aprender\\aprender.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\João Vitor\\Desktop\\aprender\\aprender\\aprender.csproj",
+        "projectUniqueName": "C:\\Users\\forgo\\trabalho euller\\aprender\\aprender.csproj",
         "projectName": "aprender",
-        "projectPath": "C:\\Users\\João Vitor\\Desktop\\aprender\\aprender\\aprender.csproj",
-        "packagesPath": "C:\\Users\\João Vitor\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\João Vitor\\Desktop\\aprender\\aprender\\obj\\",
+        "projectPath": "C:\\Users\\forgo\\trabalho euller\\aprender\\aprender.csproj",
+        "packagesPath": "C:\\Users\\forgo\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\forgo\\trabalho euller\\aprender\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\João Vitor\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\forgo\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net10.0": {
+            "framework": "net10.0",
             "targetAlias": "net10.0",
             "projectReferences": {}
           }
@@ -45,10 +39,11 @@
           "auditLevel": "low",
           "auditMode": "all"
         },
-        "SdkAnalysisLevel": "10.0.200"
+        "SdkAnalysisLevel": "10.0.400"
       },
       "frameworks": {
         "net10.0": {
+          "framework": "net10.0",
           "targetAlias": "net10.0",
           "dependencies": {
             "Microsoft.EntityFrameworkCore.Sqlite": {
@@ -75,7 +70,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.202/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.403/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",
