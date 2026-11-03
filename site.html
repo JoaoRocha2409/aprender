@@ -118,17 +118,28 @@
 
     <!-- CABEÇALHO -->
     <header class="bg-slate-900 text-white shadow-md sticky top-0 z-30">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center gap-3">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-inner">
+                <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-inner shrink-0">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                     </svg>
                 </div>
                 <div>
                     <h1 class="text-lg font-bold tracking-tight leading-none">DeskTI <span class="text-blue-400 font-semibold">Enterprise</span></h1>
-                    <span class="text-xs text-slate-400">Central Inteligente de Service Desk</span>
+                    <span class="text-xs text-slate-400 hidden sm:inline">Central Inteligente de Service Desk</span>
                 </div>
+            </div>
+
+            <!-- Indicador de Conexão com a API C# (localhost:5000) -->
+            <div class="flex items-center gap-2">
+                <div id="apiStatusBadge" class="text-xs font-medium px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 flex items-center gap-2">
+                    <span>🔄 Verificando API C#...</span>
+                </div>
+                <button id="btnReconectarApi" onclick="app.sincronizarComApi(true)" class="hidden text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-2.5 py-1.5 rounded-lg font-semibold transition flex items-center gap-1" title="Tentar reconectar com http://localhost:5000">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span>Reconectar API</span>
+                </button>
             </div>
 
             <!-- Info do Usuário Logado -->
@@ -681,6 +692,8 @@
 
         class SistemaTI {
             constructor() {
+                this.apiUrl = 'http://localhost:5000/api';
+                this.apiOnline = false;
                 this.usuarios = [];
                 this.chamados = [];
                 this.usuarioLogado = null;
@@ -688,6 +701,71 @@
                 this.chamadoIdParaExcluir = null;
 
                 this.carregarPersistencia();
+                this.sincronizarComApi(false);
+            }
+
+            // Atualiza o badge de status no cabeçalho (API C# Online vs Modo Offline LocalStorage)
+            atualizarBadgeConexao(online) {
+                this.apiOnline = online;
+                const badge = document.getElementById('apiStatusBadge');
+                const btnReconectar = document.getElementById('btnReconectarApi');
+                if (!badge || !btnReconectar) return;
+
+                if (online) {
+                    badge.className = 'text-xs font-semibold px-3 py-1.5 rounded-full bg-emerald-950/90 border border-emerald-500/40 text-emerald-300 flex items-center gap-1.5';
+                    badge.innerHTML = '<span>🟢 Conectado à API C# (localhost:5000)</span>';
+                    btnReconectar.classList.add('hidden');
+                } else {
+                    badge.className = 'text-xs font-semibold px-3 py-1.5 rounded-full bg-amber-950/90 border border-amber-500/40 text-amber-300 flex items-center gap-1.5';
+                    badge.innerHTML = '<span>🟠 Modo Offline (LocalStorage)</span>';
+                    btnReconectar.classList.remove('hidden');
+                }
+            }
+
+            // Tenta carregar usuários e chamados diretamente da API C# (http://localhost:5000)
+            async sincronizarComApi(exibirNotificacao = false) {
+                try {
+                    const [resUsuarios, resChamados] = await Promise.all([
+                        fetch(`${this.apiUrl}/usuarios`),
+                        fetch(`${this.apiUrl}/chamados`)
+                    ]);
+
+                    if (!resUsuarios.ok || !resChamados.ok) {
+                        throw new Error('Resposta inválida da API C#');
+                    }
+
+                    const usuariosApi = await resUsuarios.json();
+                    const chamadosApi = await resChamados.json();
+
+                    this.usuarios = usuariosApi;
+                    this.chamados = chamadosApi.map(c => {
+                        const instancia = new Chamado(c.id, c.titulo, c.descricao, c.categoria, c.prioridade, c.solicitante, true);
+                        return Object.assign(instancia, c);
+                    });
+
+                    // Sincroniza usuário logado caso já exista sessão ativa
+                    if (this.usuarioLogado) {
+                        const atualizado = this.usuarios.find(u => u.id === this.usuarioLogado.id || u.email.toLowerCase() === this.usuarioLogado.email.toLowerCase());
+                        if (atualizado) this.usuarioLogado = atualizado;
+                    }
+
+                    this.salvarPersistencia();
+                    this.atualizarBadgeConexao(true);
+
+                    if (this.usuarioLogado) {
+                        this.renderizarMetricas();
+                        this.renderizarTabela();
+                    }
+
+                    if (exibirNotificacao) {
+                        this.mostrarToast('Sincronizado com sucesso com a API C# (SQLite)!');
+                    }
+                } catch (err) {
+                    this.atualizarBadgeConexao(false);
+                    if (exibirNotificacao) {
+                        this.mostrarToast('API C# inacessível em localhost:5000. Operando em Modo Offline (LocalStorage).', 'error');
+                    }
+                }
             }
 
             // Verifica se o usuário logado tem permissão e se o chamado está Resolvido
@@ -766,52 +844,93 @@
                         this.popularDadosIniciais();
                     }
 
+                    // Restaurar sessão persistida sem conflitos
                     if (sessData) {
                         this.usuarioLogado = JSON.parse(sessData);
-                        if (document.readyState === 'loading') {
-                            window.addEventListener('DOMContentLoaded', () => this.ativarDashboard());
-                        } else {
+                        window.addEventListener('DOMContentLoaded', () => {
                             this.ativarDashboard();
-                        }
+                        });
                     }
-                } catch (err) {
-                    console.error('Erro ao carregar dados do localStorage, recriando base inicial:', err);
+                } catch (e) {
+                    console.error("Erro ao carregar persistência local:", e);
                     this.popularDadosIniciais();
                 }
             }
 
-            resetarDadosDemo() {
-                localStorage.removeItem('deskTI_usuarios');
-                localStorage.removeItem('deskTI_chamados');
-                this.popularDadosIniciais();
-                this.renderizarMetricas();
-                this.renderizarTabela();
-                this.mostrarToast('Dados de demonstração restaurados com sucesso!');
-            }
-
             mostrarToast(mensagem, tipo = 'success') {
                 const container = document.getElementById('toastContainer');
-                const toast = document.createElement('div');
-                const bgClass = tipo === 'error'
-                    ? 'bg-rose-600 border-rose-700'
-                    : 'bg-slate-900 border-slate-700';
+                if (!container) return;
 
-                toast.className = `toast-enter pointer-events-auto flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-white text-sm font-medium shadow-lg border ${bgClass}`;
+                const toast = document.createElement('div');
+                toast.className = `toast-enter flex items-center justify-between gap-3 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium pointer-events-auto ${
+                    tipo === 'success' 
+                        ? 'bg-emerald-950 text-emerald-100 border-emerald-500/30' 
+                        : 'bg-rose-950 text-rose-100 border-rose-500/30'
+                }`;
+                
                 toast.innerHTML = `
                     <div class="flex items-center gap-2.5">
-                        <span class="w-2 h-2 rounded-full ${tipo === 'error' ? 'bg-rose-300' : 'bg-emerald-400'}"></span>
+                        <span class="shrink-0">
+                            ${tipo === 'success' 
+                                ? '<svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
+                                : '<svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>'
+                            }
+                        </span>
                         <span>${mensagem}</span>
                     </div>
                 `;
+
                 container.appendChild(toast);
                 setTimeout(() => {
                     toast.style.opacity = '0';
-                    toast.style.transition = 'opacity 0.25s ease';
+                    toast.style.transform = 'translateX(100%)';
+                    toast.style.transition = 'all 0.25s ease-in';
                     setTimeout(() => toast.remove(), 250);
-                }, 3500);
+                }, 4000);
             }
 
-            cadastrarUsuario() {
+            resetarDadosDemo() {
+                localStorage.clear();
+                this.popularDadosIniciais();
+                this.usuarioLogado = null;
+                localStorage.removeItem('deskTI_sessao');
+                document.getElementById('authScreen').classList.remove('hidden');
+                document.getElementById('userInfoHeader').classList.add('hidden');
+                document.getElementById('mainDashboard').classList.add('hidden');
+                document.getElementById('loginEmail').value = '';
+                document.getElementById('loginSenha').value = '';
+                this.mostrarToast('Dados de demonstração restaurados!');
+            }
+
+            toggleAuth(tela) {
+                const loginForm = document.getElementById('loginForm');
+                const registerForm = document.getElementById('registerForm');
+                if (tela === 'register') {
+                    loginForm.classList.add('hidden');
+                    registerForm.classList.remove('hidden');
+                } else {
+                    registerForm.classList.add('hidden');
+                    loginForm.classList.remove('hidden');
+                }
+            }
+
+            toggleFormularioChamado() {
+                const secao = document.getElementById('secaoAbrirChamado');
+                secao.classList.toggle('hidden');
+            }
+
+            logout() {
+                this.usuarioLogado = null;
+                localStorage.removeItem('deskTI_sessao');
+                document.getElementById('authScreen').classList.remove('hidden');
+                document.getElementById('userInfoHeader').classList.add('hidden');
+                document.getElementById('mainDashboard').classList.add('hidden');
+                document.getElementById('loginEmail').value = '';
+                document.getElementById('loginSenha').value = '';
+                this.mostrarToast('Sessão encerrada com sucesso.');
+            }
+
+            async cadastrarUsuario() {
                 const nome = document.getElementById('regNome').value.trim();
                 const email = document.getElementById('regEmail').value.trim();
                 const telefone = document.getElementById('regTelefone').value.trim();
@@ -824,6 +943,32 @@
                     return;
                 }
 
+                if (this.apiOnline) {
+                    try {
+                        const res = await fetch(`${this.apiUrl}/usuarios`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ nome, email, telefone, setor, senha, tipo })
+                        });
+
+                        if (!res.ok) {
+                            const erro = await res.json().catch(() => ({}));
+                            this.mostrarToast(erro.mensagem || 'Este e-mail já está em uso!', 'error');
+                            return;
+                        }
+
+                        await this.sincronizarComApi(false);
+                        this.mostrarToast(`Conta criada no SQLite para ${nome}! Faça login.`);
+                        document.getElementById('loginEmail').value = email;
+                        document.getElementById('loginSenha').value = '';
+                        this.toggleAuth('login');
+                        return;
+                    } catch (e) {
+                        this.atualizarBadgeConexao(false);
+                    }
+                }
+
+                // Fallback Offline (LocalStorage)
                 if (this.usuarios.some(u => u.email.toLowerCase() === email.toLowerCase())) {
                     this.mostrarToast('Este e-mail corporativo já está cadastrado!', 'error');
                     return;
@@ -845,10 +990,36 @@
                 this.login();
             }
 
-            login() {
+            async login() {
                 const email = document.getElementById('loginEmail').value.trim();
                 const senha = document.getElementById('loginSenha').value;
 
+                if (this.apiOnline) {
+                    try {
+                        const res = await fetch(`${this.apiUrl}/login`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email, senha })
+                        });
+
+                        if (res.ok) {
+                            const user = await res.json();
+                            this.usuarioLogado = user;
+                            this.salvarPersistencia();
+                            await this.sincronizarComApi(false);
+                            this.ativarDashboard();
+                            this.mostrarToast(`Bem-vindo(a), ${user.nome}!`);
+                            return;
+                        } else if (res.status === 401) {
+                            this.mostrarToast('Credenciais inválidas! Verifique seu e-mail e senha.', 'error');
+                            return;
+                        }
+                    } catch (e) {
+                        this.atualizarBadgeConexao(false);
+                    }
+                }
+
+                // Fallback Offline (LocalStorage)
                 const user = this.usuarios.find(u => u.email.toLowerCase() === email.toLowerCase() && u.senha === senha);
 
                 if (user) {
@@ -886,37 +1057,7 @@
                 this.renderizarMetricas();
                 this.renderizarTabela();
             }
-
-            logout() {
-                this.usuarioLogado = null;
-                localStorage.removeItem('deskTI_sessao');
-                document.getElementById('authScreen').classList.remove('hidden');
-                const headerInfo = document.getElementById('userInfoHeader');
-                headerInfo.classList.add('hidden');
-                headerInfo.classList.remove('flex');
-                document.getElementById('mainDashboard').classList.add('hidden');
-                this.mostrarToast('Sessão encerrada com segurança.');
-            }
-
-            toggleAuth(tela) {
-                if (tela === 'register') {
-                    document.getElementById('loginForm').classList.add('hidden');
-                    document.getElementById('registerForm').classList.remove('hidden');
-                } else {
-                    document.getElementById('registerForm').classList.add('hidden');
-                    document.getElementById('loginForm').classList.remove('hidden');
-                }
-            }
-
-            toggleFormularioChamado() {
-                const secao = document.getElementById('secaoAbrirChamado');
-                secao.classList.toggle('hidden');
-                if (!secao.classList.contains('hidden')) {
-                    document.getElementById('chamadoTitulo').focus();
-                }
-            }
-
-            abrirChamado() {
+            async abrirChamado() {
                 const titulo = document.getElementById('chamadoTitulo').value.trim();
                 const categoria = document.getElementById('chamadoCategoria').value;
                 const prioridade = document.getElementById('chamadoPrioridade').value;
@@ -927,7 +1068,37 @@
                     return;
                 }
 
-                // Garante ID sequencial único mesmo se houver exclusões futuras
+                if (this.apiOnline) {
+                    try {
+                        const res = await fetch(`${this.apiUrl}/chamados`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                titulo,
+                                descricao,
+                                categoria,
+                                prioridade,
+                                solicitanteId: this.usuarioLogado.id
+                            })
+                        });
+
+                        if (res.ok) {
+                            const criado = await res.json();
+                            await this.sincronizarComApi(false);
+                            this.mostrarToast(`Chamado #${criado.id} salvo no banco SQLite!`);
+                            document.getElementById('chamadoTitulo').value = '';
+                            document.getElementById('chamadoCategoria').value = '';
+                            document.getElementById('chamadoPrioridade').value = 'Média';
+                            document.getElementById('chamadoDescricao').value = '';
+                            document.getElementById('secaoAbrirChamado').classList.add('hidden');
+                            return;
+                        }
+                    } catch (e) {
+                        this.atualizarBadgeConexao(false);
+                    }
+                }
+
+                // Fallback Offline (LocalStorage)
                 const maiorId = this.chamados.reduce((max, c) => (c.id > max ? c.id : max), 100);
 
                 const novoChamado = new Chamado(
@@ -1200,7 +1371,7 @@
                 }
             }
 
-            excluirChamado(id) {
+            async excluirChamado(id) {
                 const index = this.chamados.findIndex(c => c.id === id);
                 if (index === -1) return;
 
@@ -1211,6 +1382,30 @@
                     return;
                 }
 
+                if (this.apiOnline) {
+                    try {
+                        const res = await fetch(`${this.apiUrl}/chamados/${id}?usuarioId=${this.usuarioLogado.id}`, {
+                            method: 'DELETE'
+                        });
+
+                        if (res.ok) {
+                            await this.sincronizarComApi(false);
+                            this.cancelarExclusao();
+                            this.fecharModal();
+                            this.mostrarToast(`Chamado resolvido #${id} excluído do banco SQLite!`);
+                            return;
+                        } else {
+                            const erro = await res.json().catch(() => ({}));
+                            this.mostrarToast(erro.mensagem || 'Não foi possível excluir o chamado na API.', 'error');
+                            this.cancelarExclusao();
+                            return;
+                        }
+                    } catch (e) {
+                        this.atualizarBadgeConexao(false);
+                    }
+                }
+
+                // Fallback Offline (LocalStorage)
                 this.chamados.splice(index, 1);
                 this.salvarPersistencia();
                 this.cancelarExclusao();
@@ -1220,10 +1415,29 @@
                 this.mostrarToast('Chamado resolvido excluído com sucesso!');
             }
 
-            assumirChamadoAtual() {
+            async assumirChamadoAtual() {
                 const c = this.chamadoSelecionadoModal;
                 if (!c || !this.usuarioLogado) return;
 
+                if (this.apiOnline) {
+                    try {
+                        const res = await fetch(`${this.apiUrl}/chamados/${c.id}/atribuir`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ tecnicoId: this.usuarioLogado.id })
+                        });
+                        if (res.ok) {
+                            await this.sincronizarComApi(false);
+                            this.abrirModalDetalhes(c.id);
+                            this.mostrarToast('Você assumiu a responsabilidade deste chamado!');
+                            return;
+                        }
+                    } catch (e) {
+                        this.atualizarBadgeConexao(false);
+                    }
+                }
+
+                // Fallback Offline (LocalStorage)
                 c.tecnicoResponsavel = this.usuarioLogado;
                 if (c.status === 'Aberto') {
                     c.status = 'Em Atendimento';
@@ -1236,11 +1450,32 @@
                 this.mostrarToast('Você assumiu a responsabilidade deste chamado!');
             }
 
-            atribuirTecnico() {
+            async atribuirTecnico() {
                 const tecId = parseInt(document.getElementById('selectTecnicos').value);
                 const tecnico = this.usuarios.find(u => u.id === tecId);
 
                 if (tecnico && this.chamadoSelecionadoModal) {
+                    const idChamado = this.chamadoSelecionadoModal.id;
+
+                    if (this.apiOnline) {
+                        try {
+                            const res = await fetch(`${this.apiUrl}/chamados/${idChamado}/atribuir`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ tecnicoId: tecId })
+                            });
+                            if (res.ok) {
+                                await this.sincronizarComApi(false);
+                                this.fecharModal();
+                                this.mostrarToast(`Técnico ${tecnico.nome} vinculado com sucesso!`);
+                                return;
+                            }
+                        } catch (e) {
+                            this.atualizarBadgeConexao(false);
+                        }
+                    }
+
+                    // Fallback Offline (LocalStorage)
                     this.chamadoSelecionadoModal.tecnicoResponsavel = tecnico;
                     if (this.chamadoSelecionadoModal.status === 'Aberto') {
                         this.chamadoSelecionadoModal.status = 'Em Atendimento';
@@ -1254,7 +1489,7 @@
                 }
             }
 
-            atualizarAtendimentoTecnico() {
+            async atualizarAtendimentoTecnico() {
                 const novoStatus = document.getElementById('novoStatusTecnico').value;
                 const solucaoText = document.getElementById('textoSolucao').value.trim();
 
@@ -1264,6 +1499,40 @@
                 }
 
                 const c = this.chamadoSelecionadoModal;
+
+                if (this.apiOnline) {
+                    try {
+                        // Se ainda não tinha técnico vinculado, atribui automaticamente o técnico logado
+                        if (!c.tecnicoResponsavel && this.usuarioLogado) {
+                            await fetch(`${this.apiUrl}/chamados/${c.id}/atribuir`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ tecnicoId: this.usuarioLogado.id })
+                            });
+                        }
+
+                        const res = await fetch(`${this.apiUrl}/chamados/${c.id}/atendimento`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ status: novoStatus, solucao: solucaoText })
+                        });
+
+                        if (res.ok) {
+                            await this.sincronizarComApi(false);
+                            this.fecharModal();
+                            this.mostrarToast('Atendimento técnico salvo no banco SQLite!');
+                            return;
+                        } else {
+                            const erro = await res.json().catch(() => ({}));
+                            this.mostrarToast(erro.mensagem || 'Erro ao atualizar atendimento.', 'error');
+                            return;
+                        }
+                    } catch (e) {
+                        this.atualizarBadgeConexao(false);
+                    }
+                }
+
+                // Fallback Offline (LocalStorage)
                 if (!c.tecnicoResponsavel) {
                     c.tecnicoResponsavel = this.usuarioLogado;
                 }
@@ -1278,8 +1547,26 @@
                 this.mostrarToast('Atendimento técnico atualizado com sucesso!');
             }
 
-            reabrirChamado() {
+            async reabrirChamado() {
                 const c = this.chamadoSelecionadoModal;
+
+                if (this.apiOnline) {
+                    try {
+                        const res = await fetch(`${this.apiUrl}/chamados/${c.id}/reabrir`, {
+                            method: 'PUT'
+                        });
+                        if (res.ok) {
+                            await this.sincronizarComApi(false);
+                            this.fecharModal();
+                            this.mostrarToast('Chamado reaberto no servidor com sucesso!');
+                            return;
+                        }
+                    } catch (e) {
+                        this.atualizarBadgeConexao(false);
+                    }
+                }
+
+                // Fallback Offline (LocalStorage)
                 c.status = 'Em Atendimento';
                 c.adicionarHistorico(`Solicitação de REABERTURA efetuada pelo solicitante (${this.usuarioLogado.nome}).`);
 
@@ -1290,10 +1577,30 @@
                 this.mostrarToast('Chamado reaberto e retornado à fila de atendimento!');
             }
 
-            avaliarAtendimento() {
-                const nota = document.getElementById('selectNota').value;
+            async avaliarAtendimento() {
+                const nota = parseInt(document.getElementById('selectNota').value);
                 const c = this.chamadoSelecionadoModal;
-                c.avaliacao = nota;
+
+                if (this.apiOnline) {
+                    try {
+                        const res = await fetch(`${this.apiUrl}/chamados/${c.id}/avaliar`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ nota })
+                        });
+                        if (res.ok) {
+                            await this.sincronizarComApi(false);
+                            this.fecharModal();
+                            this.mostrarToast('Avaliação salva no banco de dados! Obrigado pelo feedback.');
+                            return;
+                        }
+                    } catch (e) {
+                        this.atualizarBadgeConexao(false);
+                    }
+                }
+
+                // Fallback Offline (LocalStorage)
+                c.avaliacao = String(nota);
                 c.adicionarHistorico(`Atendimento classificado pelo solicitante com a nota: ${nota}/5 ⭐`);
 
                 this.salvarPersistencia();
