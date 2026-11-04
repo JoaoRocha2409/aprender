@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -6,21 +6,21 @@
     <title>DeskTI Enterprise - Sistema Avançado de Chamados</title>
     <!-- Tailwind CSS CDN para estilização moderna e responsiva -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
                     },
                     colors: {
                         brand: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
+                            50: '#f0f6ff',
+                            100: '#e0ebff',
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af',
                             900: '#0f172a',
                         }
                     }
@@ -29,10 +29,9 @@
         }
     </script>
     <style>
-        /* Estilos complementares para animações, badges e timeline */
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f1f5f9;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 100%);
             color: #0f172a;
         }
 
@@ -120,13 +119,13 @@
     <header class="bg-slate-900 text-white shadow-md sticky top-0 z-30">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center gap-3">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-inner shrink-0">
+                <div class="w-10 h-10 rounded-xl bg-sky-600 flex items-center justify-center shadow-inner shrink-0">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold tracking-tight leading-none">DeskTI <span class="text-blue-400 font-semibold">Enterprise</span></h1>
+                    <h1 class="text-lg font-bold tracking-tight leading-none">DeskTI <span class="text-sky-400 font-semibold">Enterprise</span></h1>
                     <span class="text-xs text-slate-400 hidden sm:inline">Central Inteligente de Service Desk</span>
                 </div>
             </div>
@@ -146,7 +145,7 @@
             <div id="userInfoHeader" class="hidden items-center gap-4">
                 <div class="hidden sm:flex flex-col text-right">
                     <span class="text-sm font-semibold text-white leading-tight" id="userNameDisplay"></span>
-                    <span class="text-xs text-blue-400 font-medium" id="userTypeDisplay"></span>
+                    <span class="text-xs text-sky-400 font-medium" id="userTypeDisplay"></span>
                 </div>
                 <div class="h-8 w-px bg-slate-700 hidden sm:block"></div>
                 <button onclick="app.resetarDadosDemo()" title="Restaurar dados de demonstração" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
@@ -166,12 +165,12 @@
 
         <!-- TELA DE AUTENTICAÇÃO E REGISTRO -->
         <div id="authScreen" class="max-w-md mx-auto mt-4">
-            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+            <div class="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-sky-200 overflow-hidden">
                 
                 <!-- Formulário de Login -->
                 <div id="loginForm" class="p-8">
                     <div class="text-center mb-6">
-                        <span class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 mb-3">
+                        <span class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 mb-3">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                         </span>
                         <h2 class="text-2xl font-bold text-slate-900">Acesso ao Portal</h2>
@@ -181,40 +180,43 @@
                     <form onsubmit="event.preventDefault(); app.login();" class="space-y-4">
                         <div>
                             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">E-mail Corporativo</label>
-                            <input type="email" id="loginEmail" required placeholder="exemplo@ti.com" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+                            <input type="email" id="loginEmail" required placeholder="exemplo@ti.com" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Senha</label>
-                            <input type="password" id="loginSenha" required placeholder="••••••••" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+                            <input type="password" id="loginSenha" required placeholder="••••••••" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition">
                         </div>
-                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center gap-2">
+                        <button type="submit" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center gap-2">
                             <span>Entrar no Sistema</span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                         </button>
                     </form>
 
-                    <!-- Acesso Rápido de Demonstração -->
+                    <!-- Acesso Rápido de Demonstração (Cores atualizadas: Verde, Amarelo e Vermelho) -->
                     <div class="mt-6 pt-6 border-t border-slate-100">
                         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider text-center mb-3">Acesso Rápido (1 Clique para Testar)</p>
                         <div class="grid grid-cols-3 gap-2">
-                            <button type="button" onclick="app.loginRapido('user@ti.com', '123')" class="flex flex-col items-center p-2.5 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 transition text-center group">
-                                <span class="text-xs font-bold text-slate-700 group-hover:text-blue-700">Solicitante</span>
-                                <span class="text-[10px] text-slate-400">Abre chamados</span>
+                            <!-- Botão Solicitante (Verde) -->
+                            <button type="button" onclick="app.loginRapido('user@ti.com', '123')" class="flex flex-col items-center p-2.5 rounded-xl border border-emerald-300 hover:border-emerald-500 hover:bg-emerald-50 transition text-center group bg-emerald-50/60">
+                                <span class="text-xs font-bold text-emerald-800 group-hover:text-emerald-900">Solicitante</span>
+                                <span class="text-[10px] text-emerald-600">Abre chamados</span>
                             </button>
-                            <button type="button" onclick="app.loginRapido('tec@ti.com', '123')" class="flex flex-col items-center p-2.5 rounded-xl border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/50 transition text-center group">
-                                <span class="text-xs font-bold text-slate-700 group-hover:text-emerald-700">Técnico TI</span>
-                                <span class="text-[10px] text-slate-400">Resolve fila</span>
+                            <!-- Botão Técnico TI (Amarelo) -->
+                            <button type="button" onclick="app.loginRapido('tec@ti.com', '123')" class="flex flex-col items-center p-2.5 rounded-xl border border-amber-300 hover:border-amber-500 hover:bg-amber-50 transition text-center group bg-amber-50/60">
+                                <span class="text-xs font-bold text-amber-800 group-hover:text-amber-900">Técnico TI</span>
+                                <span class="text-[10px] text-amber-600">Resolve fila</span>
                             </button>
-                            <button type="button" onclick="app.loginRapido('admin@ti.com', '123')" class="flex flex-col items-center p-2.5 rounded-xl border border-slate-200 hover:border-purple-400 hover:bg-purple-50/50 transition text-center group">
-                                <span class="text-xs font-bold text-slate-700 group-hover:text-purple-700">Admin</span>
-                                <span class="text-[10px] text-slate-400">Visão total</span>
+                            <!-- Botão Admin (Vermelho) -->
+                            <button type="button" onclick="app.loginRapido('admin@ti.com', '123')" class="flex flex-col items-center p-2.5 rounded-xl border border-rose-300 hover:border-rose-500 hover:bg-rose-50 transition text-center group bg-rose-50/60">
+                                <span class="text-xs font-bold text-rose-800 group-hover:text-rose-900">Admin</span>
+                                <span class="text-[10px] text-rose-600">Visão total</span>
                             </button>
                         </div>
                     </div>
 
                     <p class="mt-6 text-xs text-center text-slate-500">
                         Ainda não possui conta? 
-                        <button type="button" onclick="app.toggleAuth('register')" class="text-blue-600 font-semibold hover:underline ml-1">Cadastre-se gratuitamente</button>
+                        <button type="button" onclick="app.toggleAuth('register')" class="text-sky-600 font-semibold hover:underline ml-1">Cadastre-se gratuitamente</button>
                     </p>
                 </div>
 
@@ -228,26 +230,26 @@
                     <form onsubmit="event.preventDefault(); app.cadastrarUsuario();" class="space-y-3.5">
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Nome Completo *</label>
-                            <input type="text" id="regNome" required placeholder="Ex: Ana Beatriz Souza" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="text" id="regNome" required placeholder="Ex: Ana Beatriz Souza" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1">E-mail *</label>
-                                <input type="email" id="regEmail" required placeholder="ana@empresa.com" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <input type="email" id="regEmail" required placeholder="ana@empresa.com" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1">Telefone / Ramal</label>
-                                <input type="text" id="regTelefone" placeholder="(11) 99999-0000" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <input type="text" id="regTelefone" placeholder="(11) 99999-0000" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
                             </div>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1">Setor / Departamento</label>
-                                <input type="text" id="regSetor" placeholder="Ex: Recursos Humanos" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <input type="text" id="regSetor" placeholder="Ex: Recursos Humanos" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1">Perfil de Acesso</label>
-                                <select id="regTipo" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <select id="regTipo" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
                                     <option value="Usuario">Usuário Solicitante</option>
                                     <option value="Tecnico">Técnico de TI</option>
                                     <option value="Administrador">Administrador</option>
@@ -256,7 +258,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Senha *</label>
-                            <input type="password" id="regSenha" required placeholder="Crie uma senha segura" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="password" id="regSenha" required placeholder="Crie uma senha segura" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
                         </div>
 
                         <div class="pt-2 space-y-2">
@@ -273,12 +275,12 @@
         <div id="mainDashboard" class="hidden space-y-6">
 
             <!-- Barra de Topo do Painel: Boas-vindas + Botão Novo Chamado -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/95 backdrop-blur-sm p-5 rounded-2xl shadow-sm border border-sky-200">
                 <div>
                     <h2 class="text-xl font-bold text-slate-900">Painel de Controle de Chamados</h2>
                     <p class="text-sm text-slate-500" id="dashboardSubtitle">Acompanhe, filtre e gerencie solicitações de suporte técnico em tempo real.</p>
                 </div>
-                <button onclick="app.toggleFormularioChamado()" id="btnToggleNovoChamado" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-xl shadow-sm hover:shadow transition flex items-center justify-center gap-2 self-start sm:self-auto">
+                <button onclick="app.toggleFormularioChamado()" id="btnToggleNovoChamado" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold px-5 py-2.5 rounded-xl shadow-sm hover:shadow transition flex items-center justify-center gap-2 self-start sm:self-auto">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     <span>Novo Chamado</span>
                 </button>
@@ -286,10 +288,10 @@
 
             <!-- CARDS DE MÉTRICAS (KPIs Clicáveis para Filtrar) -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div onclick="app.filtrarPorCard('')" class="cursor-pointer bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-blue-400 transition group">
+                <div onclick="app.filtrarPorCard('')" class="cursor-pointer bg-white/95 backdrop-blur-sm p-5 rounded-2xl shadow-sm border border-sky-200 hover:border-sky-400 transition group">
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 group-hover:text-blue-600">Total Visível</span>
-                        <span class="p-2 rounded-lg bg-slate-100 text-slate-600">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 group-hover:text-sky-600">Total Visível</span>
+                        <span class="p-2 rounded-lg bg-sky-50 text-sky-600">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                         </span>
                     </div>
@@ -297,7 +299,7 @@
                     <p class="text-xs text-slate-400 mt-1">Clique para ver todos</p>
                 </div>
 
-                <div onclick="app.filtrarPorCard('Aberto')" class="cursor-pointer bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-amber-400 transition group">
+                <div onclick="app.filtrarPorCard('Aberto')" class="cursor-pointer bg-white/95 backdrop-blur-sm p-5 rounded-2xl shadow-sm border border-sky-200 hover:border-amber-400 transition group">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold uppercase tracking-wider text-slate-400 group-hover:text-amber-600">Aguardando Fila</span>
                         <span class="p-2 rounded-lg bg-amber-50 text-amber-600">
@@ -308,18 +310,18 @@
                     <p class="text-xs text-slate-400 mt-1">Status: Aberto</p>
                 </div>
 
-                <div onclick="app.filtrarPorCard('Em Atendimento')" class="cursor-pointer bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-blue-400 transition group">
+                <div onclick="app.filtrarPorCard('Em Atendimento')" class="cursor-pointer bg-white/95 backdrop-blur-sm p-5 rounded-2xl shadow-sm border border-sky-200 hover:border-sky-400 transition group">
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 group-hover:text-blue-600">Em Andamento</span>
-                        <span class="p-2 rounded-lg bg-blue-50 text-blue-600">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 group-hover:text-sky-600">Em Andamento</span>
+                        <span class="p-2 rounded-lg bg-sky-50 text-sky-600">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                         </span>
                     </div>
-                    <h3 id="metricAtendimento" class="text-3xl font-bold text-blue-600 mt-2">0</h3>
+                    <h3 id="metricAtendimento" class="text-3xl font-bold text-sky-600 mt-2">0</h3>
                     <p class="text-xs text-slate-400 mt-1">Com suporte técnico</p>
                 </div>
 
-                <div onclick="app.filtrarPorCard('Resolvido')" class="cursor-pointer bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-emerald-400 transition group">
+                <div onclick="app.filtrarPorCard('Resolvido')" class="cursor-pointer bg-white/95 backdrop-blur-sm p-5 rounded-2xl shadow-sm border border-sky-200 hover:border-emerald-400 transition group">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold uppercase tracking-wider text-slate-400 group-hover:text-emerald-600">Concluídos</span>
                         <span class="p-2 rounded-lg bg-emerald-50 text-emerald-600">
@@ -332,7 +334,7 @@
             </div>
 
             <!-- SEÇÃO RETRÁTIL: ABRIR NOVO CHAMADO -->
-            <div id="secaoAbrirChamado" class="bg-white p-6 rounded-2xl shadow-md border-2 border-blue-500/20 hidden">
+            <div id="secaoAbrirChamado" class="bg-white/95 backdrop-blur-sm p-6 rounded-2xl shadow-md border-2 border-sky-500/20 hidden">
                 <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
                     <div>
                         <h3 class="text-lg font-bold text-slate-900">Abertura de Novo Chamado</h3>
@@ -347,11 +349,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="md:col-span-1">
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Título Resumido *</label>
-                            <input type="text" id="chamadoTitulo" required placeholder="Ex: Sem acesso à VPN corporativa" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                            <input type="text" id="chamadoTitulo" required placeholder="Ex: Sem acesso à VPN corporativa" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Categoria *</label>
-                            <select id="chamadoCategoria" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                            <select id="chamadoCategoria" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white">
                                 <option value="">Selecione a categoria...</option>
                                 <option value="Hardware">Hardware (Equipamentos/Peças)</option>
                                 <option value="Software">Software (Programas/Licenças)</option>
@@ -361,7 +363,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Nível de Prioridade *</label>
-                            <select id="chamadoPrioridade" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                            <select id="chamadoPrioridade" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white">
                                 <option value="Baixa">Baixa - Dúvida ou ajuste leve</option>
                                 <option value="Média" selected>Média - Impacto parcial no setor</option>
                                 <option value="Alta">Alta - Trabalho interrompido</option>
@@ -371,7 +373,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1">Descrição Detalhada do Problema *</label>
-                        <textarea id="chamadoDescricao" rows="3" required placeholder="Informe mensagens de erro, patrimônio do equipamento ou passos realizados antes da falha..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"></textarea>
+                        <textarea id="chamadoDescricao" rows="3" required placeholder="Informe mensagens de erro, patrimônio do equipamento ou passos realizados antes da falha..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white"></textarea>
                     </div>
                     <div class="flex justify-end gap-3 pt-2">
                         <button type="button" onclick="app.toggleFormularioChamado()" class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition">Cancelar</button>
@@ -384,19 +386,19 @@
             </div>
 
             <!-- BARRA DE FILTROS E BUSCA -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div class="bg-white/95 backdrop-blur-sm p-5 rounded-2xl shadow-sm border border-sky-200">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 items-end">
                     <div class="sm:col-span-2">
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Pesquisar Chamado</label>
                         <div class="relative">
                             <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                            <input type="text" id="filtroBusca" oninput="app.renderizarTabela()" placeholder="Buscar por #ID, título ou solicitante..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                            <input type="text" id="filtroBusca" oninput="app.renderizarTabela()" placeholder="Buscar por #ID, título ou solicitante..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white">
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Status</label>
-                        <select id="filtroStatus" onchange="app.renderizarTabela()" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <select id="filtroStatus" onchange="app.renderizarTabela()" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
                             <option value="">Todos os Status</option>
                             <option value="Aberto">Aberto</option>
                             <option value="Em Atendimento">Em Atendimento</option>
@@ -408,7 +410,7 @@
 
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Prioridade</label>
-                        <select id="filtroPrioridade" onchange="app.renderizarTabela()" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <select id="filtroPrioridade" onchange="app.renderizarTabela()" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
                             <option value="">Todas</option>
                             <option value="Crítica">Crítica</option>
                             <option value="Alta">Alta</option>
@@ -420,7 +422,7 @@
                     <div class="flex gap-2">
                         <div class="flex-1">
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Categoria</label>
-                            <select id="filtroCategoria" onchange="app.renderizarTabela()" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <select id="filtroCategoria" onchange="app.renderizarTabela()" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
                                 <option value="">Todas</option>
                                 <option value="Hardware">Hardware</option>
                                 <option value="Software">Software</option>
@@ -436,7 +438,7 @@
             </div>
 
             <!-- TABELA DE CHAMADOS -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-sm border border-sky-200 overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
                     <h3 class="font-bold text-slate-800">Fila de Chamados Registrados</h3>
                     <span id="contadorResultados" class="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">0 registros</span>
@@ -470,7 +472,7 @@
             <!-- Cabeçalho do Modal -->
             <div class="px-6 py-4 bg-slate-900 text-white flex justify-between items-center">
                 <div class="flex items-center gap-3">
-                    <span id="modalId" class="bg-blue-600 text-white text-xs font-bold px-2.5 py-1 rounded-lg">#101</span>
+                    <span id="modalId" class="bg-sky-600 text-white text-xs font-bold px-2.5 py-1 rounded-lg">#101</span>
                     <h2 id="modalTitulo" class="text-base sm:text-lg font-bold truncate max-w-md">Título do Chamado</h2>
                 </div>
                 <button onclick="app.fecharModal()" class="text-slate-400 hover:text-white p-1 rounded-lg transition">
@@ -643,7 +645,7 @@
         </div>
     </div>
 
-    <!-- LÓGICA DA APLICAÇÃO (CORRIGIDA E APRIMORADA) -->
+    <!-- LÓGICA DA APLICAÇÃO -->
     <script>
         class Usuario {
             constructor(id, nome, email, telefone, setor, senha, tipo) {
@@ -653,7 +655,7 @@
                 this.telefone = telefone || 'Não informado';
                 this.setor = setor || 'Geral';
                 this.senha = senha;
-                this.tipo = tipo; // 'Usuario', 'Tecnico', 'Administrador'
+                this.tipo = tipo;
             }
         }
 
@@ -679,7 +681,6 @@
                 this.avaliacao = null;
                 this.historico = [];
 
-                // Evita duplicar o histórico ao restaurar do localStorage
                 if (!isRestauracao && usuarioSolicitante) {
                     this.adicionarHistorico(`Chamado aberto por ${usuarioSolicitante.nome} (${usuarioSolicitante.setor || 'Geral'})`);
                 }
@@ -704,7 +705,6 @@
                 this.sincronizarComApi(false);
             }
 
-            // Atualiza o badge de status no cabeçalho (API C# Online vs Modo Offline LocalStorage)
             atualizarBadgeConexao(online) {
                 this.apiOnline = online;
                 const badge = document.getElementById('apiStatusBadge');
@@ -722,7 +722,6 @@
                 }
             }
 
-            // Tenta carregar usuários e chamados diretamente da API C# (http://localhost:5000)
             async sincronizarComApi(exibirNotificacao = false) {
                 try {
                     const [resUsuarios, resChamados] = await Promise.all([
@@ -743,7 +742,6 @@
                         return Object.assign(instancia, c);
                     });
 
-                    // Sincroniza usuário logado caso já exista sessão ativa
                     if (this.usuarioLogado) {
                         const atualizado = this.usuarios.find(u => u.id === this.usuarioLogado.id || u.email.toLowerCase() === this.usuarioLogado.email.toLowerCase());
                         if (atualizado) this.usuarioLogado = atualizado;
@@ -768,14 +766,12 @@
                 }
             }
 
-            // Verifica se o usuário logado tem permissão e se o chamado está Resolvido
             podeExcluirChamado(chamado) {
                 if (!this.usuarioLogado || !chamado) return false;
                 const isTecnicoOuAdmin = this.usuarioLogado.tipo === 'Tecnico' || this.usuarioLogado.tipo === 'Administrador';
                 return isTecnicoOuAdmin && chamado.status === 'Resolvido';
             }
 
-            // Remove acentos para classes CSS seguras (ex: 'Média' -> 'media', 'Crítica' -> 'critica')
             normalizarSlug(texto) {
                 if (!texto) return '';
                 return texto
@@ -804,7 +800,6 @@
 
                 this.usuarios = [admin, tec, tec2, user];
 
-                // Chamados de exemplo para tornar o dashboard imediatamente intuitivo
                 const ch1 = new Chamado(101, 'Lentidão extrema e queda na VPN Corporativa', 'Ao tentar conectar no ERP da matriz via VPN, a conexão cai a cada 5 minutos exibindo erro de Timeout Gateway.', 'Redes', 'Alta', user);
                 ch1.tecnicoResponsavel = tec;
                 ch1.status = 'Em Atendimento';
@@ -835,7 +830,6 @@
                     if (usrData && chmData) {
                         this.usuarios = JSON.parse(usrData);
                         const rawChamados = JSON.parse(chmData);
-                        // Passa isRestauracao = true para não duplicar a primeira linha do histórico
                         this.chamados = rawChamados.map(c => {
                             const instancia = new Chamado(c.id, c.titulo, c.descricao, c.categoria, c.prioridade, c.solicitante, true);
                             return Object.assign(instancia, c);
@@ -844,7 +838,6 @@
                         this.popularDadosIniciais();
                     }
 
-                    // Restaurar sessão persistida sem conflitos
                     if (sessData) {
                         this.usuarioLogado = JSON.parse(sessData);
                         window.addEventListener('DOMContentLoaded', () => {
@@ -968,7 +961,6 @@
                     }
                 }
 
-                // Fallback Offline (LocalStorage)
                 if (this.usuarios.some(u => u.email.toLowerCase() === email.toLowerCase())) {
                     this.mostrarToast('Este e-mail corporativo já está cadastrado!', 'error');
                     return;
@@ -1019,7 +1011,6 @@
                     }
                 }
 
-                // Fallback Offline (LocalStorage)
                 const user = this.usuarios.find(u => u.email.toLowerCase() === email.toLowerCase() && u.senha === senha);
 
                 if (user) {
@@ -1051,12 +1042,12 @@
                 headerInfo.classList.add('flex');
                 document.getElementById('mainDashboard').classList.remove('hidden');
 
-                // Esconde o formulário retrátil de abertura por padrão para manter a interface limpa
                 document.getElementById('secaoAbrirChamado').classList.add('hidden');
 
                 this.renderizarMetricas();
                 this.renderizarTabela();
             }
+
             async abrirChamado() {
                 const titulo = document.getElementById('chamadoTitulo').value.trim();
                 const categoria = document.getElementById('chamadoCategoria').value;
@@ -1098,7 +1089,6 @@
                     }
                 }
 
-                // Fallback Offline (LocalStorage)
                 const maiorId = this.chamados.reduce((max, c) => (c.id > max ? c.id : max), 100);
 
                 const novoChamado = new Chamado(
@@ -1132,7 +1122,7 @@
                     } else if (this.usuarioLogado.tipo === 'Tecnico') {
                         return c.tecnicoResponsavel === null || c.tecnicoResponsavel.id === this.usuarioLogado.id;
                     }
-                    return true; // Administrador vê todos
+                    return true;
                 });
             }
 
@@ -1209,7 +1199,7 @@
 
                 lista.forEach(c => {
                     const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-50/90 transition';
+                    tr.className = 'hover:bg-sky-50/50 transition';
                     
                     const avaliacaoStars = c.avaliacao
                         ? `<span class="ml-2 text-xs text-amber-500 font-semibold" title="Avaliação do solicitante">★ ${c.avaliacao}/5</span>`
@@ -1240,7 +1230,7 @@
                         <td class="py-3.5 px-4">${tecnicoDisplay}</td>
                         <td class="py-3.5 px-5 text-right">
                             <div class="inline-flex items-center justify-end gap-2">
-                                <button onclick="app.abrirModalDetalhes(${c.id})" class="bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white font-semibold text-xs px-3.5 py-2 rounded-lg transition inline-flex items-center gap-1.5">
+                                <button onclick="app.abrirModalDetalhes(${c.id})" class="bg-sky-50 hover:bg-sky-600 text-sky-600 hover:text-white font-semibold text-xs px-3.5 py-2 rounded-lg transition inline-flex items-center gap-1.5">
                                     <span>Gerenciar</span>
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                 </button>
@@ -1270,7 +1260,6 @@
                     ? `${chamado.dataAbertura} • Nota: ⭐ ${chamado.avaliacao}/5`
                     : chamado.dataAbertura;
 
-                // Renderiza linha do tempo
                 const hContainer = document.getElementById('historicoContainer');
                 hContainer.innerHTML = '';
                 chamado.historico.forEach(h => {
@@ -1282,7 +1271,6 @@
                     `;
                 });
 
-                // Reset de visibilidade de todos os sub-painéis do modal
                 const pAdmin = document.getElementById('painelAdminAtribuicao');
                 const pTec = document.getElementById('painelTecnicoAcao');
                 const pUser = document.getElementById('painelUsuarioAcao');
@@ -1303,7 +1291,6 @@
                     btnExcluirModal.classList.remove('hidden');
                 }
 
-                // Se for Administrador: pode designar qualquer técnico
                 if (this.usuarioLogado.tipo === 'Administrador') {
                     pAdmin.classList.remove('hidden');
                     const selectTec = document.getElementById('selectTecnicos');
@@ -1314,7 +1301,6 @@
                     });
                 }
 
-                // Se for Técnico ou Admin: pode atualizar parecer e status
                 if (this.usuarioLogado.tipo === 'Tecnico' || this.usuarioLogado.tipo === 'Administrador') {
                     pTec.classList.remove('hidden');
                     document.getElementById('novoStatusTecnico').value = chamado.status === 'Aberto' ? 'Em Atendimento' : chamado.status;
@@ -1325,7 +1311,6 @@
                     }
                 }
 
-                // Se for o Solicitante do chamado
                 if (this.usuarioLogado.id === chamado.solicitante.id) {
                     pUser.classList.remove('hidden');
                     if (chamado.status === 'Resolvido' || chamado.status === 'Encerrado') {
@@ -1405,7 +1390,6 @@
                     }
                 }
 
-                // Fallback Offline (LocalStorage)
                 this.chamados.splice(index, 1);
                 this.salvarPersistencia();
                 this.cancelarExclusao();
@@ -1437,7 +1421,6 @@
                     }
                 }
 
-                // Fallback Offline (LocalStorage)
                 c.tecnicoResponsavel = this.usuarioLogado;
                 if (c.status === 'Aberto') {
                     c.status = 'Em Atendimento';
@@ -1475,7 +1458,6 @@
                         }
                     }
 
-                    // Fallback Offline (LocalStorage)
                     this.chamadoSelecionadoModal.tecnicoResponsavel = tecnico;
                     if (this.chamadoSelecionadoModal.status === 'Aberto') {
                         this.chamadoSelecionadoModal.status = 'Em Atendimento';
@@ -1502,7 +1484,6 @@
 
                 if (this.apiOnline) {
                     try {
-                        // Se ainda não tinha técnico vinculado, atribui automaticamente o técnico logado
                         if (!c.tecnicoResponsavel && this.usuarioLogado) {
                             await fetch(`${this.apiUrl}/chamados/${c.id}/atribuir`, {
                                 method: 'PUT',
@@ -1532,7 +1513,6 @@
                     }
                 }
 
-                // Fallback Offline (LocalStorage)
                 if (!c.tecnicoResponsavel) {
                     c.tecnicoResponsavel = this.usuarioLogado;
                 }
@@ -1566,7 +1546,6 @@
                     }
                 }
 
-                // Fallback Offline (LocalStorage)
                 c.status = 'Em Atendimento';
                 c.adicionarHistorico(`Solicitação de REABERTURA efetuada pelo solicitante (${this.usuarioLogado.nome}).`);
 
@@ -1599,7 +1578,6 @@
                     }
                 }
 
-                // Fallback Offline (LocalStorage)
                 c.avaliacao = String(nota);
                 c.adicionarHistorico(`Atendimento classificado pelo solicitante com a nota: ${nota}/5 ⭐`);
 

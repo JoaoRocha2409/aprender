@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeskTI Enterprise - Sistema Avançado de Chamados</title>
+    <!-- Tailwind CSS CDN para estilização moderna e responsiva -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f6ff',
+                            100: '#e0ebff',
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 100%);
+            color: #0f172a;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Badges de Prioridade (normalizadas sem acento) */
+        .badge-prioridade {
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .badge-critica { background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+        .badge-alta { background-color: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+        .badge-media { background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+        .badge-baixa { background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+
+        /* Badges de Status */
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-aberto { background-color: #fef3c7; color: #92400e; }
+        .status-em-atendimento { background-color: #dbeafe; color: #1e40af; }
+        .status-aguardando-usuario { background-color: #f3e8ff; color: #6b21a8; }
+        .status-resolvido { background-color: #d1fae5; color: #065f46; }
+        .status-encerrado { background-color: #e2e8f0; color: #475569; }
+
+        /* Timeline do Histórico */
+        .historico-timeline {
+            border-left: 2px solid #cbd5e1;
+            margin-left: 10px;
+            padding-left: 20px;
+        }
+        .historico-item {
+            position: relative;
+            margin-bottom: 16px;
+        }
+        .historico-item::before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 4px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #2563eb;
+            box-shadow: 0 0 0 3px #dbeafe;
+        }
+
+        /* Toast Notifications */
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .toast-enter {
+            animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Scrollbar suave para modais */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- CONTAINER DE NOTIFICAÇÕES (TOAST) -->
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none"></div>
+
+    <!-- CABEÇALHO -->
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-sky-600 flex items-center justify-center shadow-inner shrink-0">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight leading-none">DeskTI <span class="text-sky-400 font-semibold">Enterprise</span></h1>
+                    <span class="text-xs text-slate-400 hidden sm:inline">Central Inteligente de Service Desk</span>
+                </div>
+            </div>
+
+            <!-- Indicador de Conexão com a API C# (localhost:5000) -->
+            <div class="flex items-center gap-2">
+                <div id="apiStatusBadge" class="text-xs font-medium px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 flex items-center gap-2">
+                    <span>🔄 Verificando API C#...</span>
+                </div>
+                <button id="btnReconectarApi" onclick="app.sincronizarComApi(true)" class="hidden text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-2.5 py-1.5 rounded-lg font-semibold transition flex items-center gap-1" title="Tentar reconectar com http://localhost:5000">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span>Reconectar API</span>
+                </button>
+            </div>
+
+            <!-- Info do Usuário Logado -->
+            <div id="userInfoHeader" class="hidden items-center gap-4">
+                <div class="hidden sm:flex flex-col text-right">
+                    <span class="text-sm font-semibold text-white leading-tight" id="userNameDisplay"></span>
+                    <span class="text-xs text-sky-400 font-medium" id="userTypeDisplay"></span>
+                </div>
+                <div class="h-8 w-px bg-slate-700 hidden sm:block"></div>
+                <button onclick="app.resetarDadosDemo()" title="Restaurar dados de demonstração" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span class="hidden md:inline">Reset Demo</span>
+                </button>
+                <button onclick="app.logout()" class="bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium px-3.5 py-2 rounded-lg transition shadow-sm flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    <span>Sair</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- TELA DE AUTENTICAÇÃO E REGISTRO -->
+        <div id="authScreen" class="max-w-md mx-auto mt-4">
+            <div class="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-sky-200 overflow-hidden">
+                
+                <!-- Formulário de Login -->
+                <div id="loginForm" class="p-8">
+                    <div class="text-center mb-6">
+                        <span class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 mb-3">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        </span>
+                        <h2 class="text-2xl font-bold text-slate-900">Acesso ao Portal</h2>
+                        <p class="text-sm text-slate-500 mt-1">Entre com suas credenciais corporativas</p>
+                    </div>
+
+                    <form onsubmit="event.preventDefault(); app.login();" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">E-mail Corporativo</label>
+                            <input type="email" id="loginEmail" required placeholder="exemplo@ti.com" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Senha</label>
+                            <input type="password" id="loginSenha" required placeholder="••••••••" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition">
+                        </div>
+                        <button type="submit" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center gap-2">
+                            <span>Entrar no Sistema</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </button>
+                    </form>
+
+                    <!-- Acesso Rápido de Demonstração (Cores atualizadas: Verde, Amarelo e Vermelho) -->
+                    <div class="mt-6 pt-6 border-t border-slate-100">
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider text-center mb-3">Acesso Rápido (1 Clique para Testar)</p>
+                        <div class="grid grid-cols-3 gap-2">
+                            <!-- Botão Solicitante (Verde) -->
+                            <button type="button" onclick="app.loginRapido('user@ti.com', '123')" class="flex flex-col items-center p-2.5 rounded-xl border border-emerald-300 hover:border-emerald-500 hover:bg-emerald-50 transition text-center group bg-emerald-50/60">
+                                <span class="text-xs font-bold text-emerald-800 group-hover:text-emerald-900">Solicitante</span>
+                                <span class="text-[10px] text-emerald-600">Abre chamados</span>
+                            </button>
+                            <!-- Botão Técnico TI (Amarelo) -->
+                            <button type="button" onclick="app.loginRapido('tec@ti.com', '123')" class="flex flex-col items-center p-2.5 rounded-xl border border-amber-300 hover:border-amber-500 hover:bg-amber-50 transition text-center group bg-amber-50/60">
+                                <span class="text-xs font-bold text-amber-800 group-hover:text-amber-900">Técnico TI</span>
+                                <span class="text-[10px] text-amber-600">Resolve fila</span>
+                            </button>
+                            <!-- Botão Admin (Vermelho) -->
+                            <button type="button" onclick="app.loginRapido('admin@ti.com', '123')" class="flex flex-col items-center p-2.5 rounded-xl border border-rose-300 hover:border-rose-500 hover:bg-rose-50 transition text-center group bg-rose-50/60">
+                                <span class="text-xs font-bold text-rose-800 group-hover:text-rose-900">Admin</span>
+                                <span class="text-[10px] text-rose-600">Visão total</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <p class="mt-6 text-xs text-center text-slate-500">
+                        Ainda não possui conta? 
+                        <button type="button" onclick="app.toggleAuth('register')" class="text-sky-600 font-semibold hover:underline ml-1">Cadastre-se gratuitamente</button>
+                    </p>
+                </div>
+
+                <!-- Formulário de Cadastro -->
+                <div id="registerForm" class="p-8 hidden">
+                    <div class="mb-6">
+                        <h2 class="text-xl font-bold text-slate-900">Criar Conta Corporativa</h2>
+                        <p class="text-sm text-slate-500 mt-1">Preencha os dados para acessar o Service Desk</p>
+                    </div>
+
+                    <form onsubmit="event.preventDefault(); app.cadastrarUsuario();" class="space-y-3.5">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Nome Completo *</label>
+                            <input type="text" id="regNome" required placeholder="Ex: Ana Beatriz Souza" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">E-mail *</label>
+                                <input type="email" id="regEmail" required placeholder="ana@empresa.com" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Telefone / Ramal</label>
+                                <input type="text" id="regTelefone" placeholder="(11) 99999-0000" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Setor / Departamento</label>
+                                <input type="text" id="regSetor" placeholder="Ex: Recursos Humanos" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Perfil de Acesso</label>
+                                <select id="regTipo" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                                    <option value="Usuario">Usuário Solicitante</option>
+                                    <option value="Tecnico">Técnico de TI</option>
+                                    <option value="Administrador">Administrador</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Senha *</label>
+                            <input type="password" id="regSenha" required placeholder="Crie uma senha segura" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        </div>
+
+                        <div class="pt-2 space-y-2">
+                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl shadow transition">Finalizar Cadastro</button>
+                            <button type="button" onclick="app.toggleAuth('login')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 rounded-xl transition">Voltar ao Login</button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- PAINEL PRINCIPAL (DASHBOARD) -->
+        <div id="mainDashboard" class="hidden space-y-6">
+
+            <!-- Barra de Topo do Painel: Boas-vindas + Botão Novo Chamado -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/95 backdrop-blur-sm p-5 rounded-2xl shadow-sm border border-sky-200">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Painel de Controle de Chamados</h2>
+                    <p class="text-sm text-slate-500" id="dashboardSubtitle">Acompanhe, filtre e gerencie solicitações de suporte técnico em tempo real.</p>
+                </div>
+                <button onclick="app.toggleFormularioChamado()" id="btnToggleNovoChamado" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold px-5 py-2.5 rounded-xl shadow-sm hover:shadow transition flex items-center justify-center gap-2 self-start sm:self-auto">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    <span>Novo Chamado</span>
+                </button>
+            </div>
+
+            <!-- CARDS DE MÉTRICAS (KPIs Clicáveis para Filtrar) -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div onclick="app.filtrarPorCard('')" class="cursor-pointer bg-white/95 backdrop-blur-sm p-5 rounded-2xl shadow-sm border border-sky-200 hover:border-sky-400 transition group">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 group-hover:text-sky-600">Total Visível</span>
+                        <span class="p-2 rounded-lg bg-sky-50 text-sky-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        </span>
+                    </div>
+                    <h3 id="metricTotal" class="text-3xl font-bold text-slate-900 mt-2">0</h3>
+                    <p class="text-xs text-slate-400 mt-1">Clique para ver todos</p>
+                </div>
+
+                <div onclick="app.filtrarPorCard('Aberto')" class="cursor-pointer bg-white/95 backdrop-blur-sm p-5 rounded-2xl shadow-sm border border-sky-200 hover:border-amber-400 transition group">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 group-hover:text-amber-600">Aguardando Fila</span>
+                        <span class="p-2 rounded-lg bg-amber-50 text-amber-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </span>
+                    </div>
+                    <h3 id="metricAbertos" class="text-3xl font-bold text-amber-600 mt-2">0</h3>
+                    <p class="text-xs text-slate-400 mt-1">Status: Aberto</p>
+                </div>
+
+                <div onclick="app.filtrarPorCard('Em Atendimento')" class="cursor-pointer bg-white/95 backdrop-blur-sm p-5 rounded-2xl shadow-sm border border-sky-200 hover:border-sky-400 transition group">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 group-hover:text-sky-600">Em Andamento</span>
+                        <span class="p-2 rounded-lg bg-sky-50 text-sky-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        </span>
+                    </div>
+                    <h3 id="metricAtendimento" class="text-3xl font-bold text-sky-600 mt-2">0</h3>
+                    <p class="text-xs text-slate-400 mt-1">Com suporte técnico</p>
+                </div>
+
+                <div onclick="app.filtrarPorCard('Resolvido')" class="cursor-pointer bg-white/95 backdrop-blur-sm p-5 rounded-2xl shadow-sm border border-sky-200 hover:border-emerald-400 transition group">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 group-hover:text-emerald-600">Concluídos</span>
+                        <span class="p-2 rounded-lg bg-emerald-50 text-emerald-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </span>
+                    </div>
+                    <h3 id="metricResolvidos" class="text-3xl font-bold text-emerald-600 mt-2">0</h3>
+                    <p class="text-xs text-slate-400 mt-1">Resolvidos / Encerrados</p>
+                </div>
+            </div>
+
+            <!-- SEÇÃO RETRÁTIL: ABRIR NOVO CHAMADO -->
+            <div id="secaoAbrirChamado" class="bg-white/95 backdrop-blur-sm p-6 rounded-2xl shadow-md border-2 border-sky-500/20 hidden">
+                <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Abertura de Novo Chamado</h3>
+                        <p class="text-xs text-slate-500">Detalhe o incidente ou requisição para direcionamento rápido à equipe de TI.</p>
+                    </div>
+                    <button type="button" onclick="app.toggleFormularioChamado()" class="text-slate-400 hover:text-slate-600 p-1">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+
+                <form onsubmit="event.preventDefault(); app.abrirChamado();" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="md:col-span-1">
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Título Resumido *</label>
+                            <input type="text" id="chamadoTitulo" required placeholder="Ex: Sem acesso à VPN corporativa" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Categoria *</label>
+                            <select id="chamadoCategoria" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white">
+                                <option value="">Selecione a categoria...</option>
+                                <option value="Hardware">Hardware (Equipamentos/Peças)</option>
+                                <option value="Software">Software (Programas/Licenças)</option>
+                                <option value="Redes">Redes (Internet/Wi-Fi/VPN)</option>
+                                <option value="Acessos">Acessos e Senhas</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Nível de Prioridade *</label>
+                            <select id="chamadoPrioridade" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white">
+                                <option value="Baixa">Baixa - Dúvida ou ajuste leve</option>
+                                <option value="Média" selected>Média - Impacto parcial no setor</option>
+                                <option value="Alta">Alta - Trabalho interrompido</option>
+                                <option value="Crítica">Crítica - Sistema/Setor inteiro parado</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Descrição Detalhada do Problema *</label>
+                        <textarea id="chamadoDescricao" rows="3" required placeholder="Informe mensagens de erro, patrimônio do equipamento ou passos realizados antes da falha..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white"></textarea>
+                    </div>
+                    <div class="flex justify-end gap-3 pt-2">
+                        <button type="button" onclick="app.toggleFormularioChamado()" class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition">Cancelar</button>
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2.5 rounded-xl shadow transition flex items-center gap-2 text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            <span>Registrar Chamado</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- BARRA DE FILTROS E BUSCA -->
+            <div class="bg-white/95 backdrop-blur-sm p-5 rounded-2xl shadow-sm border border-sky-200">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 items-end">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Pesquisar Chamado</label>
+                        <div class="relative">
+                            <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <input type="text" id="filtroBusca" oninput="app.renderizarTabela()" placeholder="Buscar por #ID, título ou solicitante..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Status</label>
+                        <select id="filtroStatus" onchange="app.renderizarTabela()" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                            <option value="">Todos os Status</option>
+                            <option value="Aberto">Aberto</option>
+                            <option value="Em Atendimento">Em Atendimento</option>
+                            <option value="Aguardando Usuário">Aguardando Usuário</option>
+                            <option value="Resolvido">Resolvido</option>
+                            <option value="Encerrado">Encerrado</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Prioridade</label>
+                        <select id="filtroPrioridade" onchange="app.renderizarTabela()" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                            <option value="">Todas</option>
+                            <option value="Crítica">Crítica</option>
+                            <option value="Alta">Alta</option>
+                            <option value="Média">Média</option>
+                            <option value="Baixa">Baixa</option>
+                        </select>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <div class="flex-1">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Categoria</label>
+                            <select id="filtroCategoria" onchange="app.renderizarTabela()" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                                <option value="">Todas</option>
+                                <option value="Hardware">Hardware</option>
+                                <option value="Software">Software</option>
+                                <option value="Redes">Redes</option>
+                                <option value="Acessos">Acessos</option>
+                            </select>
+                        </div>
+                        <button type="button" onclick="app.limparFiltros()" title="Limpar todos os filtros" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition h-[38px] self-end">
+                            Limpar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABELA DE CHAMADOS -->
+            <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-sm border border-sky-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-800">Fila de Chamados Registrados</h3>
+                    <span id="contadorResultados" class="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">0 registros</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                <th class="py-3.5 px-5">ID</th>
+                                <th class="py-3.5 px-5">Chamado / Solicitante</th>
+                                <th class="py-3.5 px-4">Categoria</th>
+                                <th class="py-3.5 px-4">Prioridade</th>
+                                <th class="py-3.5 px-4">Status</th>
+                                <th class="py-3.5 px-4">Técnico Responsável</th>
+                                <th class="py-3.5 px-5 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaChamadosBody" class="divide-y divide-slate-200 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- MODAL DE DETALHES E GERENCIAMENTO -->
+    <div id="modalDetalhes" onclick="if(event.target === this) app.fecharModal()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            
+            <!-- Cabeçalho do Modal -->
+            <div class="px-6 py-4 bg-slate-900 text-white flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <span id="modalId" class="bg-sky-600 text-white text-xs font-bold px-2.5 py-1 rounded-lg">#101</span>
+                    <h2 id="modalTitulo" class="text-base sm:text-lg font-bold truncate max-w-md">Título do Chamado</h2>
+                </div>
+                <button onclick="app.fecharModal()" class="text-slate-400 hover:text-white p-1 rounded-lg transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Corpo Rolável do Modal -->
+            <div class="p-6 overflow-y-auto space-y-6 flex-1">
+                
+                <!-- Resumo de Metadados -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200/80 text-xs">
+                    <div>
+                        <span class="text-slate-400 block font-medium">Solicitante</span>
+                        <strong id="modalSolicitante" class="text-slate-800 mt-0.5 block"></strong>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-medium">Categoria</span>
+                        <strong id="modalCategoria" class="text-slate-800 mt-0.5 block"></strong>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-medium">Prioridade</span>
+                        <div id="modalPrioridade" class="mt-1"></div>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-medium">Status Atual</span>
+                        <div id="modalStatus" class="mt-1"></div>
+                    </div>
+                    <div class="col-span-2">
+                        <span class="text-slate-400 block font-medium">Técnico Designado</span>
+                        <strong id="modalTecnico" class="text-slate-800 mt-0.5 block"></strong>
+                    </div>
+                    <div class="col-span-2">
+                        <span class="text-slate-400 block font-medium">Abertura / Avaliação</span>
+                        <strong id="modalDataAvaliacao" class="text-slate-800 mt-0.5 block"></strong>
+                    </div>
+                </div>
+
+                <!-- Descrição Original -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Descrição do Incidente</h4>
+                    <div id="modalDescricao" class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-700 leading-relaxed"></div>
+                </div>
+
+                <!-- Painel Admin: Designar Técnico -->
+                <div id="painelAdminAtribuicao" class="bg-indigo-50/70 border border-indigo-200 rounded-xl p-4 hidden">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-900 mb-2 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <span>Atribuição de Responsável (Admin)</span>
+                    </h4>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <select id="selectTecnicos" class="flex-1 px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+                        <button onclick="app.atribuirTecnico()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition shadow-xs">
+                            Vincular Técnico
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Painel Técnico: Atualizar Status e Solução -->
+                <div id="painelTecnicoAcao" class="bg-emerald-50/70 border border-emerald-200 rounded-xl p-4 hidden space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-900 flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            <span>Parecer Técnico e Status</span>
+                        </h4>
+                        <button id="btnAssumirRapido" onclick="app.assumirChamadoAtual()" class="hidden text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1 rounded-lg transition">
+                            Assumir para Mim
+                        </button>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-emerald-800 mb-1">Novo Status do Chamado</label>
+                        <select id="novoStatusTecnico" class="w-full px-3 py-2 bg-white border border-emerald-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="Em Atendimento">Em Atendimento</option>
+                            <option value="Aguardando Usuário">Aguardando Retorno do Usuário</option>
+                            <option value="Resolvido">Resolvido (Solução Aplicada)</option>
+                            <option value="Encerrado">Encerrado Definitivamente</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-emerald-800 mb-1">Laudo Técnico / Solução / Apontamento</label>
+                        <textarea id="textoSolucao" rows="2" placeholder="Descreva o procedimento técnico realizado ou orientação ao usuário..." class="w-full px-3 py-2 bg-white border border-emerald-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                    </div>
+                    <button onclick="app.atualizarAtendimentoTecnico()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-5 py-2.5 rounded-lg shadow-xs transition">
+                        Salvar Atualização Técnica
+                    </button>
+                </div>
+
+                <!-- Painel do Solicitante: Avaliar ou Reabrir -->
+                <div id="painelUsuarioAcao" class="bg-amber-50/80 border border-amber-200 rounded-xl p-4 hidden space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-amber-900">Ações do Solicitante</h4>
+                    <p id="msgAguardandoSolucao" class="text-xs text-amber-800">Seu chamado está na fila de atendimento. Assim que for concluído, você poderá avaliar a solução ou reabri-lo por aqui.</p>
+                    
+                    <div id="acoesPosResolucao" class="hidden space-y-3 pt-1">
+                        <div id="painelAvaliacao" class="flex flex-col sm:flex-row gap-2 sm:items-center justify-between bg-white p-3 rounded-lg border border-amber-200">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700">Avaliar Atendimento de TI</label>
+                                <span class="text-[11px] text-slate-500">Qual seu nível de satisfação com a solução?</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <select id="selectNota" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold">
+                                    <option value="5">⭐⭐⭐⭐⭐ (5 - Excelente)</option>
+                                    <option value="4">⭐⭐⭐⭐ (4 - Bom)</option>
+                                    <option value="3">⭐⭐⭐ (3 - Regular)</option>
+                                    <option value="2">⭐⭐ (2 - Insatisfeito)</option>
+                                    <option value="1">⭐ (1 - Péssimo)</option>
+                                </select>
+                                <button onclick="app.avaliarAtendimento()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg transition">
+                                    Avaliar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center pt-1">
+                            <span class="text-xs text-slate-600">O problema ainda persiste?</span>
+                            <button id="btnReabrir" onclick="app.reabrirChamado()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition">
+                                Reabrir Chamado
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Linha do Tempo de Histórico -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Histórico de Rastreabilidade</h4>
+                    <div id="historicoContainer" class="historico-timeline"></div>
+                </div>
+
+            </div>
+
+            <!-- Rodapé do Modal -->
+            <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex justify-between items-center gap-3">
+                <button id="btnExcluirModal" onclick="if(app.chamadoSelecionadoModal) app.solicitarExclusaoChamado(app.chamadoSelecionadoModal.id)" class="hidden bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition shadow-xs flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    <span>Excluir Chamado Resolvido</span>
+                </button>
+                <div class="ml-auto">
+                    <button onclick="app.fecharModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold px-5 py-2 rounded-lg transition">
+                        Fechar Janela
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMAÇÃO DE EXCLUSÃO -->
+    <div id="modalConfirmarExclusao" onclick="if(event.target === this) app.cancelarExclusao()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden p-6">
+            <div class="flex items-start gap-4">
+                <div class="w-11 h-11 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-base font-bold text-slate-900">Confirmar Exclusão de Chamado</h3>
+                    <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                        Tem certeza que deseja apagar permanentemente o chamado resolvido <strong id="confirmExclusaoId" class="text-slate-800"></strong> (<span id="confirmExclusaoTitulo" class="italic"></span>)? Esta ação não poderá ser desfeita.
+                    </p>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2.5 mt-6 pt-4 border-t border-slate-100">
+                <button type="button" onclick="app.cancelarExclusao()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+                    Cancelar
+                </button>
+                <button type="button" onclick="app.confirmarExclusao()" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    <span>Sim, Excluir</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LÓGICA DA APLICAÇÃO -->
+    <script>
+        class Usuario {
+            constructor(id, nome, email, telefone, setor, senha, tipo) {
+                this.id = id;
+                this.nome = nome;
+                this.email = email;
+                this.telefone = telefone || 'Não informado';
+                this.setor = setor || 'Geral';
+                this.senha = senha;
+                this.tipo = tipo;
+            }
+        }
+
+        class HistoricoRegistro {
+            constructor(descricao, dataPersonalizada = null) {
+                this.data = dataPersonalizada || new Date().toLocaleString('pt-BR');
+                this.descricao = descricao;
+            }
+        }
+
+        class Chamado {
+            constructor(id, titulo, descricao, categoria, prioridade, usuarioSolicitante, isRestauracao = false) {
+                this.id = id;
+                this.titulo = titulo;
+                this.descricao = descricao;
+                this.categoria = categoria;
+                this.prioridade = prioridade;
+                this.status = 'Aberto';
+                this.solicitante = usuarioSolicitante;
+                this.tecnicoResponsavel = null;
+                this.dataAbertura = new Date().toLocaleString('pt-BR');
+                this.solucao = '';
+                this.avaliacao = null;
+                this.historico = [];
+
+                if (!isRestauracao && usuarioSolicitante) {
+                    this.adicionarHistorico(`Chamado aberto por ${usuarioSolicitante.nome} (${usuarioSolicitante.setor || 'Geral'})`);
+                }
+            }
+
+            adicionarHistorico(descricao, dataPersonalizada = null) {
+                this.historico.push(new HistoricoRegistro(descricao, dataPersonalizada));
+            }
+        }
+
+        class SistemaTI {
+            constructor() {
+                this.apiUrl = 'http://localhost:5000/api';
+                this.apiOnline = false;
+                this.usuarios = [];
+                this.chamados = [];
+                this.usuarioLogado = null;
+                this.chamadoSelecionadoModal = null;
+                this.chamadoIdParaExcluir = null;
+
+                this.carregarPersistencia();
+                this.sincronizarComApi(false);
+            }
+
+            atualizarBadgeConexao(online) {
+                this.apiOnline = online;
+                const badge = document.getElementById('apiStatusBadge');
+                const btnReconectar = document.getElementById('btnReconectarApi');
+                if (!badge || !btnReconectar) return;
+
+                if (online) {
+                    badge.className = 'text-xs font-semibold px-3 py-1.5 rounded-full bg-emerald-950/90 border border-emerald-500/40 text-emerald-300 flex items-center gap-1.5';
+                    badge.innerHTML = '<span>🟢 Conectado à API C# (localhost:5000)</span>';
+                    btnReconectar.classList.add('hidden');
+                } else {
+                    badge.className = 'text-xs font-semibold px-3 py-1.5 rounded-full bg-amber-950/90 border border-amber-500/40 text-amber-300 flex items-center gap-1.5';
+                    badge.innerHTML = '<span>🟠 Modo Offline (LocalStorage)</span>';
+                    btnReconectar.classList.remove('hidden');
+                }
+            }
+
+            async sincronizarComApi(exibirNotificacao = false) {
+                try {
+                    const [resUsuarios, resChamados] = await Promise.all([
+                        fetch(`${this.apiUrl}/usuarios`),
+                        fetch(`${this.apiUrl}/chamados`)
+                    ]);
+
+                    if (!resUsuarios.ok || !resChamados.ok) {
+                        throw new Error('Resposta inválida da API C#');
+                    }
+
+                    const usuariosApi = await resUsuarios.json();
+                    const chamadosApi = await resChamados.json();
+
+                    this.usuarios = usuariosApi;
+                    this.chamados = chamadosApi.map(c => {
+                        const instancia = new Chamado(c.id, c.titulo, c.descricao, c.categoria, c.prioridade, c.solicitante, true);
+                        return Object.assign(instancia, c);
+                    });
+
+                    if (this.usuarioLogado) {
+                        const atualizado = this.usuarios.find(u => u.id === this.usuarioLogado.id || u.email.toLowerCase() === this.usuarioLogado.email.toLowerCase());
+                        if (atualizado) this.usuarioLogado = atualizado;
+                    }
+
+                    this.salvarPersistencia();
+                    this.atualizarBadgeConexao(true);
+
+                    if (this.usuarioLogado) {
+                        this.renderizarMetricas();
+                        this.renderizarTabela();
+                    }
+
+                    if (exibirNotificacao) {
+                        this.mostrarToast('Sincronizado com sucesso com a API C# (SQLite)!');
+                    }
+                } catch (err) {
+                    this.atualizarBadgeConexao(false);
+                    if (exibirNotificacao) {
+                        this.mostrarToast('API C# inacessível em localhost:5000. Operando em Modo Offline (LocalStorage).', 'error');
+                    }
+                }
+            }
+
+            podeExcluirChamado(chamado) {
+                if (!this.usuarioLogado || !chamado) return false;
+                const isTecnicoOuAdmin = this.usuarioLogado.tipo === 'Tecnico' || this.usuarioLogado.tipo === 'Administrador';
+                return isTecnicoOuAdmin && chamado.status === 'Resolvido';
+            }
+
+            normalizarSlug(texto) {
+                if (!texto) return '';
+                return texto
+                    .toString()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .toLowerCase()
+                    .replace(/\s+/g, '-');
+            }
+
+            salvarPersistencia() {
+                localStorage.setItem('deskTI_usuarios', JSON.stringify(this.usuarios));
+                localStorage.setItem('deskTI_chamados', JSON.stringify(this.chamados));
+                if (this.usuarioLogado) {
+                    localStorage.setItem('deskTI_sessao', JSON.stringify(this.usuarioLogado));
+                } else {
+                    localStorage.removeItem('deskTI_sessao');
+                }
+            }
+
+            popularDadosIniciais() {
+                const admin = new Usuario(1, 'Carlos Mendes (Admin)', 'admin@ti.com', '(11) 98888-1000', 'Governança TI', '123', 'Administrador');
+                const tec = new Usuario(2, 'Lucas Ferreira (Suporte N2)', 'tec@ti.com', '(11) 98888-2000', 'Infraestrutura', '123', 'Tecnico');
+                const tec2 = new Usuario(4, 'Mariana Costa (Redes)', 'mariana@ti.com', '(11) 98888-3000', ' Segurança & Redes', '123', 'Tecnico');
+                const user = new Usuario(3, 'Beatriz Rocha', 'user@ti.com', '(11) 98888-4000', 'Financeiro', '123', 'Usuario');
+
+                this.usuarios = [admin, tec, tec2, user];
+
+                const ch1 = new Chamado(101, 'Lentidão extrema e queda na VPN Corporativa', 'Ao tentar conectar no ERP da matriz via VPN, a conexão cai a cada 5 minutos exibindo erro de Timeout Gateway.', 'Redes', 'Alta', user);
+                ch1.tecnicoResponsavel = tec;
+                ch1.status = 'Em Atendimento';
+                ch1.adicionarHistorico(`Atribuído ao técnico ${tec.nome}`);
+                ch1.adicionarHistorico('Status modificado para [Em Atendimento]. Apontamento: Verificando rotas de firewall e MTU do túnel SSL.');
+
+                const ch2 = new Chamado(102, 'Instalação do pacote Office e certificado A3', 'Preciso da configuração do leitor de token USB para emissão de notas fiscais no novo notebook corporativo.', 'Software', 'Média', user);
+
+                const ch3 = new Chamado(103, 'Substituição de fonte queimada na estação 04', 'Computador desligou após oscilação elétrica e não liga mais. Led da placa-mãe apagado.', 'Hardware', 'Crítica', user);
+                ch3.tecnicoResponsavel = tec2;
+                ch3.status = 'Resolvido';
+                ch3.solucao = 'Fonte ATX 500W substituída por unidade nova em garantia. Testes de estresse realizados com sucesso.';
+                ch3.avaliacao = '5';
+                ch3.adicionarHistorico(`Atribuído ao técnico ${tec2.nome}`);
+                ch3.adicionarHistorico(`Status modificado para [Resolvido]. Apontamento: ${ch3.solucao}`);
+                ch3.adicionarHistorico('Atendimento classificado com a nota: 5/5');
+
+                this.chamados = [ch1, ch2, ch3];
+                this.salvarPersistencia();
+            }
+
+            carregarPersistencia() {
+                try {
+                    const usrData = localStorage.getItem('deskTI_usuarios');
+                    const chmData = localStorage.getItem('deskTI_chamados');
+                    const sessData = localStorage.getItem('deskTI_sessao');
+
+                    if (usrData && chmData) {
+                        this.usuarios = JSON.parse(usrData);
+                        const rawChamados = JSON.parse(chmData);
+                        this.chamados = rawChamados.map(c => {
+                            const instancia = new Chamado(c.id, c.titulo, c.descricao, c.categoria, c.prioridade, c.solicitante, true);
+                            return Object.assign(instancia, c);
+                        });
+                    } else {
+                        this.popularDadosIniciais();
+                    }
+
+                    if (sessData) {
+                        this.usuarioLogado = JSON.parse(sessData);
+                        window.addEventListener('DOMContentLoaded', () => {
+                            this.ativarDashboard();
+                        });
+                    }
+                } catch (e) {
+                    console.error("Erro ao carregar persistência local:", e);
+                    this.popularDadosIniciais();
+                }
+            }
+
+            mostrarToast(mensagem, tipo = 'success') {
+                const container = document.getElementById('toastContainer');
+                if (!container) return;
+
+                const toast = document.createElement('div');
+                toast.className = `toast-enter flex items-center justify-between gap-3 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium pointer-events-auto ${
+                    tipo === 'success' 
+                        ? 'bg-emerald-950 text-emerald-100 border-emerald-500/30' 
+                        : 'bg-rose-950 text-rose-100 border-rose-500/30'
+                }`;
+                
+                toast.innerHTML = `
+                    <div class="flex items-center gap-2.5">
+                        <span class="shrink-0">
+                            ${tipo === 'success' 
+                                ? '<svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
+                                : '<svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>'
+                            }
+                        </span>
+                        <span>${mensagem}</span>
+                    </div>
+                `;
+
+                container.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(100%)';
+                    toast.style.transition = 'all 0.25s ease-in';
+                    setTimeout(() => toast.remove(), 250);
+                }, 4000);
+            }
+
+            resetarDadosDemo() {
+                localStorage.clear();
+                this.popularDadosIniciais();
+                this.usuarioLogado = null;
+                localStorage.removeItem('deskTI_sessao');
+                document.getElementById('authScreen').classList.remove('hidden');
+                document.getElementById('userInfoHeader').classList.add('hidden');
+                document.getElementById('mainDashboard').classList.add('hidden');
+                document.getElementById('loginEmail').value = '';
+                document.getElementById('loginSenha').value = '';
+                this.mostrarToast('Dados de demonstração restaurados!');
+            }
+
+            toggleAuth(tela) {
+                const loginForm = document.getElementById('loginForm');
+                const registerForm = document.getElementById('registerForm');
+                if (tela === 'register') {
+                    loginForm.classList.add('hidden');
+                    registerForm.classList.remove('hidden');
+                } else {
+                    registerForm.classList.add('hidden');
+                    loginForm.classList.remove('hidden');
+                }
+            }
+
+            toggleFormularioChamado() {
+                const secao = document.getElementById('secaoAbrirChamado');
+                secao.classList.toggle('hidden');
+            }
+
+            logout() {
+                this.usuarioLogado = null;
+                localStorage.removeItem('deskTI_sessao');
+                document.getElementById('authScreen').classList.remove('hidden');
+                document.getElementById('userInfoHeader').classList.add('hidden');
+                document.getElementById('mainDashboard').classList.add('hidden');
+                document.getElementById('loginEmail').value = '';
+                document.getElementById('loginSenha').value = '';
+                this.mostrarToast('Sessão encerrada com sucesso.');
+            }
+
+            async cadastrarUsuario() {
+                const nome = document.getElementById('regNome').value.trim();
+                const email = document.getElementById('regEmail').value.trim();
+                const telefone = document.getElementById('regTelefone').value.trim();
+                const setor = document.getElementById('regSetor').value.trim();
+                const tipo = document.getElementById('regTipo').value;
+                const senha = document.getElementById('regSenha').value;
+
+                if (!nome || !email || !senha) {
+                    this.mostrarToast('Preencha todos os campos obrigatórios (*)!', 'error');
+                    return;
+                }
+
+                if (this.apiOnline) {
+                    try {
+                        const res = await fetch(`${this.apiUrl}/usuarios`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ nome, email, telefone, setor, senha, tipo })
+                        });
+
+                        if (!res.ok) {
+                            const erro = await res.json().catch(() => ({}));
+                            this.mostrarToast(erro.mensagem || 'Este e-mail já está em uso!', 'error');
+                            return;
+                        }
+
+                        await this.sincronizarComApi(false);
+                        this.mostrarToast(`Conta criada no SQLite para ${nome}! Faça login.`);
+                        document.getElementById('loginEmail').value = email;
+                        document.getElementById('loginSenha').value = '';
+                        this.toggleAuth('login');
+                        return;
+                    } catch (e) {
+                        this.atualizarBadgeConexao(false);
+                    }
+                }
+
+                if (this.usuarios.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+                    this.mostrarToast('Este e-mail corporativo já está cadastrado!', 'error');
+                    return;
+                }
+
+                const novo = new Usuario(Date.now(), nome, email, telefone, setor, senha, tipo);
+                this.usuarios.push(novo);
+                this.salvarPersistencia();
+
+                this.mostrarToast(`Conta criada para ${nome}! Faça login.`);
+                document.getElementById('loginEmail').value = email;
+                document.getElementById('loginSenha').value = '';
+                this.toggleAuth('login');
+            }
+
+            loginRapido(email, senha) {
+                document.getElementById('loginEmail').value = email;
+                document.getElementById('loginSenha').value = senha;
+                this.login();
+            }
+
+            async login() {
+                const email = document.getElementById('loginEmail').value.trim();
+                const senha = document.getElementById('loginSenha').value;
+
+                if (this.apiOnline) {
+                    try {
+                        const res = await fetch(`${this.apiUrl}/login`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email, senha })
+                        });
+
+                        if (res.ok) {
+                            const user = await res.json();
+                            this.usuarioLogado = user;
+                            this.salvarPersistencia();
+                            await this.sincronizarComApi(false);
+                            this.ativarDashboard();
+                            this.mostrarToast(`Bem-vindo(a), ${user.nome}!`);
+                            return;
+                        } else if (res.status === 401) {
+                            this.mostrarToast('Credenciais inválidas! Verifique seu e-mail e senha.', 'error');
+                            return;
+                        }
+                    } catch (e) {
+                        this.atualizarBadgeConexao(false);
+                    }
+                }
+
+                const user = this.usuarios.find(u => u.email.toLowerCase() === email.toLowerCase() && u.senha === senha);
+
+                if (user) {
+                    this.usuarioLogado = user;
+                    this.salvarPersistencia();
+                    this.ativarDashboard();
+                    this.mostrarToast(`Bem-vindo(a), ${user.nome}!`);
+                } else {
+                    this.mostrarToast('Credenciais inválidas! Verifique seu e-mail e senha.', 'error');
+                }
+            }
+
+            ativarDashboard() {
+                const user = this.usuarioLogado;
+                if (!user) return;
+
+                const mapaPerfis = {
+                    'Usuario': 'Solicitante',
+                    'Tecnico': 'Técnico de Suporte TI',
+                    'Administrador': 'Administrador Master'
+                };
+
+                document.getElementById('userNameDisplay').innerText = user.nome;
+                document.getElementById('userTypeDisplay').innerText = `${mapaPerfis[user.tipo] || user.tipo} • ${user.setor || 'TI'}`;
+
+                document.getElementById('authScreen').classList.add('hidden');
+                const headerInfo = document.getElementById('userInfoHeader');
+                headerInfo.classList.remove('hidden');
+                headerInfo.classList.add('flex');
+                document.getElementById('mainDashboard').classList.remove('hidden');
+
+                document.getElementById('secaoAbrirChamado').classList.add('hidden');
+
+                this.renderizarMetricas();
+                this.renderizarTabela();
+            }
+
+            async abrirChamado() {
+                const titulo = document.getElementById('chamadoTitulo').value.trim();
+                const categoria = document.getElementById('chamadoCategoria').value;
+                const prioridade = document.getElementById('chamadoPrioridade').value;
+                const descricao = document.getElementById('chamadoDescricao').value.trim();
+
+                if (!titulo || !categoria || !prioridade || !descricao) {
+                    this.mostrarToast('Preencha todos os campos obrigatórios do chamado!', 'error');
+                    return;
+                }
+
+                if (this.apiOnline) {
+                    try {
+                        const res = await fetch(`${this.apiUrl}/chamados`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                titulo,
+                                descricao,
+                                categoria,
+                                prioridade,
+                                solicitanteId: this.usuarioLogado.id
+                            })
+                        });
+
+                        if (res.ok) {
+                            const criado = await res.json();
+                            await this.sincronizarComApi(false);
+                            this.mostrarToast(`Chamado #${criado.id} salvo no banco SQLite!`);
+                            document.getElementById('chamadoTitulo').value = '';
+                            document.getElementById('chamadoCategoria').value = '';
+                            document.getElementById('chamadoPrioridade').value = 'Média';
+                            document.getElementById('chamadoDescricao').value = '';
+                            document.getElementById('secaoAbrirChamado').classList.add('hidden');
+                            return;
+                        }
+                    } catch (e) {
+                        this.atualizarBadgeConexao(false);
+                    }
+                }
+
+                const maiorId = this.chamados.reduce((max, c) => (c.id > max ? c.id : max), 100);
+
+                const novoChamado = new Chamado(
+                    maiorId + 1,
+                    titulo,
+                    descricao,
+                    categoria,
+                    prioridade,
+                    this.usuarioLogado
+                );
+
+                this.chamados.unshift(novoChamado);
+                this.salvarPersistencia();
+
+                this.mostrarToast(`Chamado #${novoChamado.id} registrado com sucesso!`);
+                document.getElementById('chamadoTitulo').value = '';
+                document.getElementById('chamadoCategoria').value = '';
+                document.getElementById('chamadoPrioridade').value = 'Média';
+                document.getElementById('chamadoDescricao').value = '';
+                document.getElementById('secaoAbrirChamado').classList.add('hidden');
+
+                this.renderizarMetricas();
+                this.renderizarTabela();
+            }
+
+            obterListaFiltradaPorPermissao() {
+                if (!this.usuarioLogado) return [];
+                return this.chamados.filter(c => {
+                    if (this.usuarioLogado.tipo === 'Usuario') {
+                        return c.solicitante && c.solicitante.id === this.usuarioLogado.id;
+                    } else if (this.usuarioLogado.tipo === 'Tecnico') {
+                        return c.tecnicoResponsavel === null || c.tecnicoResponsavel.id === this.usuarioLogado.id;
+                    }
+                    return true;
+                });
+            }
+
+            renderizarMetricas() {
+                const lista = this.obterListaFiltradaPorPermissao();
+                document.getElementById('metricTotal').innerText = lista.length;
+                document.getElementById('metricAbertos').innerText = lista.filter(c => c.status === 'Aberto').length;
+                document.getElementById('metricAtendimento').innerText = lista.filter(c => c.status === 'Em Atendimento' || c.status === 'Aguardando Usuário').length;
+                document.getElementById('metricResolvidos').innerText = lista.filter(c => c.status === 'Resolvido' || c.status === 'Encerrado').length;
+            }
+
+            filtrarPorCard(status) {
+                document.getElementById('filtroStatus').value = status;
+                this.renderizarTabela();
+            }
+
+            limparFiltros() {
+                document.getElementById('filtroBusca').value = '';
+                document.getElementById('filtroStatus').value = '';
+                document.getElementById('filtroPrioridade').value = '';
+                document.getElementById('filtroCategoria').value = '';
+                this.renderizarTabela();
+            }
+
+            gerarBadgePrioridadeHTML(prioridade) {
+                const slug = this.normalizarSlug(prioridade);
+                return `<span class="badge-prioridade badge-${slug}">${prioridade}</span>`;
+            }
+
+            gerarBadgeStatusHTML(status) {
+                const slug = this.normalizarSlug(status);
+                return `<span class="status-badge status-${slug}">${status}</span>`;
+            }
+
+            renderizarTabela() {
+                const tbody = document.getElementById('tabelaChamadosBody');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+
+                const termoBusca = (document.getElementById('filtroBusca')?.value || '').trim().toLowerCase();
+                const fStatus = document.getElementById('filtroStatus').value;
+                const fPrioridade = document.getElementById('filtroPrioridade').value;
+                const fCategoria = document.getElementById('filtroCategoria').value;
+
+                let lista = this.obterListaFiltradaPorPermissao();
+
+                if (termoBusca) {
+                    lista = lista.filter(c =>
+                        String(c.id).includes(termoBusca) ||
+                        c.titulo.toLowerCase().includes(termoBusca) ||
+                        (c.solicitante?.nome || '').toLowerCase().includes(termoBusca)
+                    );
+                }
+                if (fStatus) lista = lista.filter(c => c.status === fStatus);
+                if (fPrioridade) lista = lista.filter(c => c.prioridade === fPrioridade);
+                if (fCategoria) lista = lista.filter(c => c.categoria === fCategoria);
+
+                const contador = document.getElementById('contadorResultados');
+                if (contador) {
+                    contador.innerText = `${lista.length} ${lista.length === 1 ? 'registro' : 'registros'}`;
+                }
+
+                if (lista.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center py-12 px-4">
+                                <div class="text-slate-400 font-medium">Nenhum chamado encontrado para os filtros selecionados.</div>
+                                <p class="text-xs text-slate-400 mt-1">Tente limpar os filtros ou abrir um novo chamado.</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                lista.forEach(c => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-sky-50/50 transition';
+                    
+                    const avaliacaoStars = c.avaliacao
+                        ? `<span class="ml-2 text-xs text-amber-500 font-semibold" title="Avaliação do solicitante">★ ${c.avaliacao}/5</span>`
+                        : '';
+
+                    const tecnicoDisplay = c.tecnicoResponsavel
+                        ? `<div class="font-medium text-slate-700">${c.tecnicoResponsavel.nome}</div>`
+                        : `<span class="text-xs italic text-amber-600 font-medium">Aguardando atribuição</span>`;
+
+                    const botaoExcluir = this.podeExcluirChamado(c)
+                        ? `<button onclick="app.solicitarExclusaoChamado(${c.id})" title="Excluir chamado resolvido" class="bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white font-semibold text-xs px-3 py-2 rounded-lg transition inline-flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                <span>Excluir</span>
+                           </button>`
+                        : '';
+
+                    tr.innerHTML = `
+                        <td class="py-3.5 px-5 font-bold text-slate-700">#${c.id}</td>
+                        <td class="py-3.5 px-5">
+                            <div class="font-semibold text-slate-900">${c.titulo} ${avaliacaoStars}</div>
+                            <div class="text-xs text-slate-400 mt-0.5">Por: ${c.solicitante?.nome || 'Usuário'} (${c.solicitante?.setor || 'Geral'}) • ${c.dataAbertura}</div>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="text-xs font-medium bg-slate-100 text-slate-700 px-2.5 py-1 rounded-md">${c.categoria}</span>
+                        </td>
+                        <td class="py-3.5 px-4">${this.gerarBadgePrioridadeHTML(c.prioridade)}</td>
+                        <td class="py-3.5 px-4">${this.gerarBadgeStatusHTML(c.status)}</td>
+                        <td class="py-3.5 px-4">${tecnicoDisplay}</td>
+                        <td class="py-3.5 px-5 text-right">
+                            <div class="inline-flex items-center justify-end gap-2">
+                                <button onclick="app.abrirModalDetalhes(${c.id})" class="bg-sky-50 hover:bg-sky-600 text-sky-600 hover:text-white font-semibold text-xs px-3.5 py-2 rounded-lg transition inline-flex items-center gap-1.5">
+                                    <span>Gerenciar</span>
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                </button>
+                                ${botaoExcluir}
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            abrirModalDetalhes(id) {
+                const chamado = this.chamados.find(c => c.id === id);
+                if (!chamado) return;
+
+                this.chamadoSelecionadoModal = chamado;
+
+                document.getElementById('modalId').innerText = `#${chamado.id}`;
+                document.getElementById('modalSolicitante').innerText = `${chamado.solicitante.nome} (${chamado.solicitante.setor || 'Geral'})`;
+                document.getElementById('modalTitulo').innerText = chamado.titulo;
+                document.getElementById('modalDescricao').innerText = chamado.descricao;
+                document.getElementById('modalCategoria').innerText = chamado.categoria;
+                document.getElementById('modalPrioridade').innerHTML = this.gerarBadgePrioridadeHTML(chamado.prioridade);
+                document.getElementById('modalStatus').innerHTML = this.gerarBadgeStatusHTML(chamado.status);
+                document.getElementById('modalTecnico').innerText = chamado.tecnicoResponsavel ? chamado.tecnicoResponsavel.nome : 'Pendente de atribuição';
+                document.getElementById('modalDataAvaliacao').innerText = chamado.avaliacao
+                    ? `${chamado.dataAbertura} • Nota: ⭐ ${chamado.avaliacao}/5`
+                    : chamado.dataAbertura;
+
+                const hContainer = document.getElementById('historicoContainer');
+                hContainer.innerHTML = '';
+                chamado.historico.forEach(h => {
+                    hContainer.innerHTML += `
+                        <div class="historico-item">
+                            <div class="text-[11px] font-semibold text-slate-400">${h.data}</div>
+                            <div class="text-xs text-slate-700 mt-0.5 bg-slate-50 p-2.5 rounded-lg border border-slate-200/70">${h.descricao}</div>
+                        </div>
+                    `;
+                });
+
+                const pAdmin = document.getElementById('painelAdminAtribuicao');
+                const pTec = document.getElementById('painelTecnicoAcao');
+                const pUser = document.getElementById('painelUsuarioAcao');
+                const btnAssumirRapido = document.getElementById('btnAssumirRapido');
+                const btnExcluirModal = document.getElementById('btnExcluirModal');
+                const acoesPosResolucao = document.getElementById('acoesPosResolucao');
+                const msgAguardandoSolucao = document.getElementById('msgAguardandoSolucao');
+
+                pAdmin.classList.add('hidden');
+                pTec.classList.add('hidden');
+                pUser.classList.add('hidden');
+                btnAssumirRapido.classList.add('hidden');
+                btnExcluirModal.classList.add('hidden');
+                acoesPosResolucao.classList.add('hidden');
+                msgAguardandoSolucao.classList.remove('hidden');
+
+                if (this.podeExcluirChamado(chamado)) {
+                    btnExcluirModal.classList.remove('hidden');
+                }
+
+                if (this.usuarioLogado.tipo === 'Administrador') {
+                    pAdmin.classList.remove('hidden');
+                    const selectTec = document.getElementById('selectTecnicos');
+                    selectTec.innerHTML = '';
+                    this.usuarios.filter(u => u.tipo === 'Tecnico' || u.tipo === 'Administrador').forEach(t => {
+                        const selected = chamado.tecnicoResponsavel && chamado.tecnicoResponsavel.id === t.id ? 'selected' : '';
+                        selectTec.innerHTML += `<option value="${t.id}" ${selected}>${t.nome} (${t.tipo})</option>`;
+                    });
+                }
+
+                if (this.usuarioLogado.tipo === 'Tecnico' || this.usuarioLogado.tipo === 'Administrador') {
+                    pTec.classList.remove('hidden');
+                    document.getElementById('novoStatusTecnico').value = chamado.status === 'Aberto' ? 'Em Atendimento' : chamado.status;
+                    document.getElementById('textoSolucao').value = chamado.solucao || '';
+
+                    if (!chamado.tecnicoResponsavel) {
+                        btnAssumirRapido.classList.remove('hidden');
+                    }
+                }
+
+                if (this.usuarioLogado.id === chamado.solicitante.id) {
+                    pUser.classList.remove('hidden');
+                    if (chamado.status === 'Resolvido' || chamado.status === 'Encerrado') {
+                        msgAguardandoSolucao.classList.add('hidden');
+                        acoesPosResolucao.classList.remove('hidden');
+                        if (chamado.avaliacao) {
+                            document.getElementById('selectNota').value = chamado.avaliacao;
+                        }
+                    }
+                }
+
+                document.getElementById('modalDetalhes').classList.remove('hidden');
+            }
+
+            fecharModal() {
+                document.getElementById('modalDetalhes').classList.add('hidden');
+                this.chamadoSelecionadoModal = null;
+            }
+
+            solicitarExclusaoChamado(id) {
+                const chamado = this.chamados.find(c => c.id === id);
+                if (!chamado) return;
+
+                if (!this.podeExcluirChamado(chamado)) {
+                    this.mostrarToast('Apenas Técnicos de TI ou Administradores podem excluir chamados com status Resolvido!', 'error');
+                    return;
+                }
+
+                this.chamadoIdParaExcluir = id;
+                document.getElementById('confirmExclusaoId').innerText = `#${chamado.id}`;
+                document.getElementById('confirmExclusaoTitulo').innerText = chamado.titulo;
+                document.getElementById('modalConfirmarExclusao').classList.remove('hidden');
+            }
+
+            cancelarExclusao() {
+                this.chamadoIdParaExcluir = null;
+                document.getElementById('modalConfirmarExclusao').classList.add('hidden');
+            }
+
+            confirmarExclusao() {
+                if (this.chamadoIdParaExcluir !== null) {
+                    this.excluirChamado(this.chamadoIdParaExcluir);
+                }
+            }
+
+            async excluirChamado(id) {
+                const index = this.chamados.findIndex(c => c.id === id);
+                if (index === -1) return;
+
+                const chamado = this.chamados[index];
+                if (!this.podeExcluirChamado(chamado)) {
+                    this.mostrarToast('Permissão negada ou o chamado não está com status Resolvido!', 'error');
+                    this.cancelarExclusao();
+                    return;
+                }
+
+                if (this.apiOnline) {
+                    try {
+                        const res = await fetch(`${this.apiUrl}/chamados/${id}?usuarioId=${this.usuarioLogado.id}`, {
+                            method: 'DELETE'
+                        });
+
+                        if (res.ok) {
+                            await this.sincronizarComApi(false);
+                            this.cancelarExclusao();
+                            this.fecharModal();
+                            this.mostrarToast(`Chamado resolvido #${id} excluído do banco SQLite!`);
+                            return;
+                        } else {
+                            const erro = await res.json().catch(() => ({}));
+                            this.mostrarToast(erro.mensagem || 'Não foi possível excluir o chamado na API.', 'error');
+                            this.cancelarExclusao();
+                            return;
+                        }
+                    } catch (e) {
+                        this.atualizarBadgeConexao(false);
+                    }
+                }
+
+                this.chamados.splice(index, 1);
+                this.salvarPersistencia();
+                this.cancelarExclusao();
+                this.fecharModal();
+                this.renderizarMetricas();
+                this.renderizarTabela();
+                this.mostrarToast('Chamado resolvido excluído com sucesso!');
+            }
+
+            async assumirChamadoAtual() {
+                const c = this.chamadoSelecionadoModal;
+                if (!c || !this.usuarioLogado) return;
+
+                if (this.apiOnline) {
+                    try {
+                        const res = await fetch(`${this.apiUrl}/chamados/${c.id}/atribuir`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ tecnicoId: this.usuarioLogado.id })
+                        });
+                        if (res.ok) {
+                            await this.sincronizarComApi(false);
+                            this.abrirModalDetalhes(c.id);
+                            this.mostrarToast('Você assumiu a responsabilidade deste chamado!');
+                            return;
+                        }
+                    } catch (e) {
+                        this.atualizarBadgeConexao(false);
+                    }
+                }
+
+                c.tecnicoResponsavel = this.usuarioLogado;
+                if (c.status === 'Aberto') {
+                    c.status = 'Em Atendimento';
+                }
+                c.adicionarHistorico(`Chamado assumido pelo técnico ${this.usuarioLogado.nome}`);
+                this.salvarPersistencia();
+                this.abrirModalDetalhes(c.id);
+                this.renderizarMetricas();
+                this.renderizarTabela();
+                this.mostrarToast('Você assumiu a responsabilidade deste chamado!');
+            }
+
+            async atribuirTecnico() {
+                const tecId = parseInt(document.getElementById('selectTecnicos').value);
+                const tecnico = this.usuarios.find(u => u.id === tecId);
+
+                if (tecnico && this.chamadoSelecionadoModal) {
+                    const idChamado = this.chamadoSelecionadoModal.id;
+
+                    if (this.apiOnline) {
+                        try {
+                            const res = await fetch(`${this.apiUrl}/chamados/${idChamado}/atribuir`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ tecnicoId: tecId })
+                            });
+                            if (res.ok) {
+                                await this.sincronizarComApi(false);
+                                this.fecharModal();
+                                this.mostrarToast(`Técnico ${tecnico.nome} vinculado com sucesso!`);
+                                return;
+                            }
+                        } catch (e) {
+                            this.atualizarBadgeConexao(false);
+                        }
+                    }
+
+                    this.chamadoSelecionadoModal.tecnicoResponsavel = tecnico;
+                    if (this.chamadoSelecionadoModal.status === 'Aberto') {
+                        this.chamadoSelecionadoModal.status = 'Em Atendimento';
+                    }
+                    this.chamadoSelecionadoModal.adicionarHistorico(`Atribuído ao técnico ${tecnico.nome}`);
+                    this.salvarPersistencia();
+                    this.fecharModal();
+                    this.renderizarMetricas();
+                    this.renderizarTabela();
+                    this.mostrarToast(`Técnico ${tecnico.nome} vinculado com sucesso!`);
+                }
+            }
+
+            async atualizarAtendimentoTecnico() {
+                const novoStatus = document.getElementById('novoStatusTecnico').value;
+                const solucaoText = document.getElementById('textoSolucao').value.trim();
+
+                if ((novoStatus === 'Resolvido' || novoStatus === 'Encerrado') && !solucaoText) {
+                    this.mostrarToast('Informe o laudo/solução para resolver ou encerrar o chamado!', 'error');
+                    return;
+                }
+
+                const c = this.chamadoSelecionadoModal;
+
+                if (this.apiOnline) {
+                    try {
+                        if (!c.tecnicoResponsavel && this.usuarioLogado) {
+                            await fetch(`${this.apiUrl}/chamados/${c.id}/atribuir`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ tecnicoId: this.usuarioLogado.id })
+                            });
+                        }
+
+                        const res = await fetch(`${this.apiUrl}/chamados/${c.id}/atendimento`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ status: novoStatus, solucao: solucaoText })
+                        });
+
+                        if (res.ok) {
+                            await this.sincronizarComApi(false);
+                            this.fecharModal();
+                            this.mostrarToast('Atendimento técnico salvo no banco SQLite!');
+                            return;
+                        } else {
+                            const erro = await res.json().catch(() => ({}));
+                            this.mostrarToast(erro.mensagem || 'Erro ao atualizar atendimento.', 'error');
+                            return;
+                        }
+                    } catch (e) {
+                        this.atualizarBadgeConexao(false);
+                    }
+                }
+
+                if (!c.tecnicoResponsavel) {
+                    c.tecnicoResponsavel = this.usuarioLogado;
+                }
+                c.status = novoStatus;
+                c.solucao = solucaoText;
+                c.adicionarHistorico(`Status modificado para [${novoStatus}] por ${this.usuarioLogado.nome}. Apontamento: ${solucaoText || 'Em análise técnica.'}`);
+
+                this.salvarPersistencia();
+                this.fecharModal();
+                this.renderizarMetricas();
+                this.renderizarTabela();
+                this.mostrarToast('Atendimento técnico atualizado com sucesso!');
+            }
+
+            async reabrirChamado() {
+                const c = this.chamadoSelecionadoModal;
+
+                if (this.apiOnline) {
+                    try {
+                        const res = await fetch(`${this.apiUrl}/chamados/${c.id}/reabrir`, {
+                            method: 'PUT'
+                        });
+                        if (res.ok) {
+                            await this.sincronizarComApi(false);
+                            this.fecharModal();
+                            this.mostrarToast('Chamado reaberto no servidor com sucesso!');
+                            return;
+                        }
+                    } catch (e) {
+                        this.atualizarBadgeConexao(false);
+                    }
+                }
+
+                c.status = 'Em Atendimento';
+                c.adicionarHistorico(`Solicitação de REABERTURA efetuada pelo solicitante (${this.usuarioLogado.nome}).`);
+
+                this.salvarPersistencia();
+                this.fecharModal();
+                this.renderizarMetricas();
+                this.renderizarTabela();
+                this.mostrarToast('Chamado reaberto e retornado à fila de atendimento!');
+            }
+
+            async avaliarAtendimento() {
+                const nota = parseInt(document.getElementById('selectNota').value);
+                const c = this.chamadoSelecionadoModal;
+
+                if (this.apiOnline) {
+                    try {
+                        const res = await fetch(`${this.apiUrl}/chamados/${c.id}/avaliar`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ nota })
+                        });
+                        if (res.ok) {
+                            await this.sincronizarComApi(false);
+                            this.fecharModal();
+                            this.mostrarToast('Avaliação salva no banco de dados! Obrigado pelo feedback.');
+                            return;
+                        }
+                    } catch (e) {
+                        this.atualizarBadgeConexao(false);
+                    }
+                }
+
+                c.avaliacao = String(nota);
+                c.adicionarHistorico(`Atendimento classificado pelo solicitante com a nota: ${nota}/5 ⭐`);
+
+                this.salvarPersistencia();
+                this.fecharModal();
+                this.renderizarMetricas();
+                this.renderizarTabela();
+                this.mostrarToast('Avaliação registrada com sucesso! Obrigado pelo feedback.');
+            }
+        }
+
+        const app = new SistemaTI();
+    </script>
+</body>
+</html>
