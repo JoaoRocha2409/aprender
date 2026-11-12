@@ -192,22 +192,25 @@
                         </button>
                     </form>
 
-                    <!-- Acesso Rápido de Demonstração (Cores atualizadas: Verde, Amarelo e Vermelho) -->
+                    <!-- Seleção de Perfil de Acesso (Valida compatibilidade do perfil) -->
                     <div class="mt-6 pt-6 border-t border-slate-100">
-                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider text-center mb-3">Acesso Rápido (1 Clique para Testar)</p>
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Selecionar Perfil de Acesso</p>
+                            <button type="button" id="btnLimparPerfil" onclick="app.limparPerfilSelecionado()" class="hidden text-[11px] font-semibold text-sky-600 hover:underline">Limpar seleção</button>
+                        </div>
                         <div class="grid grid-cols-3 gap-2">
                             <!-- Botão Solicitante (Verde) -->
-                            <button type="button" onclick="app.loginRapido('user@ti.com', '123')" class="flex flex-col items-center p-2.5 rounded-xl border border-emerald-300 hover:border-emerald-500 hover:bg-emerald-50 transition text-center group bg-emerald-50/60">
+                            <button type="button" id="btnPerfilUsuario" onclick="app.selecionarPerfil('Usuario', 'user@ti.com')" class="perfil-btn flex flex-col items-center p-2.5 rounded-xl border border-emerald-300 hover:border-emerald-500 hover:bg-emerald-50 transition text-center group bg-emerald-50/60">
                                 <span class="text-xs font-bold text-emerald-800 group-hover:text-emerald-900">Solicitante</span>
                                 <span class="text-[10px] text-emerald-600">Abre chamados</span>
                             </button>
                             <!-- Botão Técnico TI (Amarelo) -->
-                            <button type="button" onclick="app.loginRapido('tec@ti.com', '123')" class="flex flex-col items-center p-2.5 rounded-xl border border-amber-300 hover:border-amber-500 hover:bg-amber-50 transition text-center group bg-amber-50/60">
+                            <button type="button" id="btnPerfilTecnico" onclick="app.selecionarPerfil('Tecnico', 'tec@ti.com')" class="perfil-btn flex flex-col items-center p-2.5 rounded-xl border border-amber-300 hover:border-amber-500 hover:bg-amber-50 transition text-center group bg-amber-50/60">
                                 <span class="text-xs font-bold text-amber-800 group-hover:text-amber-900">Técnico TI</span>
                                 <span class="text-[10px] text-amber-600">Resolve fila</span>
                             </button>
                             <!-- Botão Admin (Vermelho) -->
-                            <button type="button" onclick="app.loginRapido('admin@ti.com', '123')" class="flex flex-col items-center p-2.5 rounded-xl border border-rose-300 hover:border-rose-500 hover:bg-rose-50 transition text-center group bg-rose-50/60">
+                            <button type="button" id="btnPerfilAdministrador" onclick="app.selecionarPerfil('Administrador', 'admin@ti.com')" class="perfil-btn flex flex-col items-center p-2.5 rounded-xl border border-rose-300 hover:border-rose-500 hover:bg-rose-50 transition text-center group bg-rose-50/60">
                                 <span class="text-xs font-bold text-rose-800 group-hover:text-rose-900">Admin</span>
                                 <span class="text-[10px] text-rose-600">Visão total</span>
                             </button>
@@ -698,6 +701,7 @@
                 this.usuarios = [];
                 this.chamados = [];
                 this.usuarioLogado = null;
+                this.perfilSelecionado = null;
                 this.chamadoSelecionadoModal = null;
                 this.chamadoIdParaExcluir = null;
 
@@ -886,6 +890,7 @@
                 localStorage.clear();
                 this.popularDadosIniciais();
                 this.usuarioLogado = null;
+                this.limparPerfilSelecionado();
                 localStorage.removeItem('deskTI_sessao');
                 document.getElementById('authScreen').classList.remove('hidden');
                 document.getElementById('userInfoHeader').classList.add('hidden');
@@ -914,6 +919,7 @@
 
             logout() {
                 this.usuarioLogado = null;
+                this.limparPerfilSelecionado();
                 localStorage.removeItem('deskTI_sessao');
                 document.getElementById('authScreen').classList.remove('hidden');
                 document.getElementById('userInfoHeader').classList.add('hidden');
@@ -952,6 +958,7 @@
 
                         await this.sincronizarComApi(false);
                         this.mostrarToast(`Conta criada no SQLite para ${nome}! Faça login.`);
+                        this.limparPerfilSelecionado();
                         document.getElementById('loginEmail').value = email;
                         document.getElementById('loginSenha').value = '';
                         this.toggleAuth('login');
@@ -971,39 +978,70 @@
                 this.salvarPersistencia();
 
                 this.mostrarToast(`Conta criada para ${nome}! Faça login.`);
+                this.limparPerfilSelecionado();
                 document.getElementById('loginEmail').value = email;
                 document.getElementById('loginSenha').value = '';
                 this.toggleAuth('login');
             }
 
-            loginRapido(email, senha) {
-                document.getElementById('loginEmail').value = email;
-                document.getElementById('loginSenha').value = senha;
-                this.login();
+            selecionarPerfil(tipoPerfil, emailSugerido) {
+                this.perfilSelecionado = tipoPerfil;
+
+                document.querySelectorAll('.perfil-btn').forEach(btn => {
+                    btn.classList.remove('ring-2', 'ring-offset-1', 'ring-sky-500');
+                });
+                const btnAtivo = document.getElementById(`btnPerfil${tipoPerfil}`);
+                if (btnAtivo) {
+                    btnAtivo.classList.add('ring-2', 'ring-offset-1', 'ring-sky-500');
+                }
+                const btnLimpar = document.getElementById('btnLimparPerfil');
+                if (btnLimpar) btnLimpar.classList.remove('hidden');
+
+                document.getElementById('loginEmail').value = emailSugerido;
+                const campoSenha = document.getElementById('loginSenha');
+                campoSenha.value = '';
+                campoSenha.focus();
+
+                const nomesPerfis = {
+                    'Usuario': 'Solicitante',
+                    'Tecnico': 'Técnico TI',
+                    'Administrador': 'Admin'
+                };
+                this.mostrarToast(`Perfil [${nomesPerfis[tipoPerfil]}] selecionado. Digite e-mail e senha deste perfil.`);
+            }
+
+            limparPerfilSelecionado() {
+                this.perfilSelecionado = null;
+                document.querySelectorAll('.perfil-btn').forEach(btn => {
+                    btn.classList.remove('ring-2', 'ring-offset-1', 'ring-sky-500');
+                });
+                const btnLimpar = document.getElementById('btnLimparPerfil');
+                if (btnLimpar) btnLimpar.classList.add('hidden');
             }
 
             async login() {
                 const email = document.getElementById('loginEmail').value.trim();
                 const senha = document.getElementById('loginSenha').value;
 
+                let userAutenticado = null;
+
                 if (this.apiOnline) {
                     try {
                         const res = await fetch(`${this.apiUrl}/login`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ email, senha })
+                            body: JSON.stringify({
+                                email,
+                                senha,
+                                tipoEsperado: this.perfilSelecionado
+                            })
                         });
 
                         if (res.ok) {
-                            const user = await res.json();
-                            this.usuarioLogado = user;
-                            this.salvarPersistencia();
-                            await this.sincronizarComApi(false);
-                            this.ativarDashboard();
-                            this.mostrarToast(`Bem-vindo(a), ${user.nome}!`);
-                            return;
-                        } else if (res.status === 401) {
-                            this.mostrarToast('Credenciais inválidas! Verifique seu e-mail e senha.', 'error');
+                            userAutenticado = await res.json();
+                        } else {
+                            const erro = await res.json().catch(() => ({}));
+                            this.mostrarToast(erro.mensagem || 'Credenciais inválidas ou perfil incorreto!', 'error');
                             return;
                         }
                     } catch (e) {
@@ -1011,16 +1049,32 @@
                     }
                 }
 
-                const user = this.usuarios.find(u => u.email.toLowerCase() === email.toLowerCase() && u.senha === senha);
+                // Fallback offline (LocalStorage) ou validação complementar
+                if (!userAutenticado) {
+                    userAutenticado = this.usuarios.find(
+                        u => u.email.toLowerCase() === email.toLowerCase() && u.senha === senha
+                    );
 
-                if (user) {
-                    this.usuarioLogado = user;
-                    this.salvarPersistencia();
-                    this.ativarDashboard();
-                    this.mostrarToast(`Bem-vindo(a), ${user.nome}!`);
-                } else {
-                    this.mostrarToast('Credenciais inválidas! Verifique seu e-mail e senha.', 'error');
+                    if (!userAutenticado) {
+                        this.mostrarToast('Credenciais inválidas! Verifique seu e-mail e senha.', 'error');
+                        return;
+                    }
                 }
+
+                if (this.perfilSelecionado && userAutenticado.tipo !== this.perfilSelecionado) {
+                    this.mostrarToast(
+                        `Acesso negado: esta conta pertence ao perfil '${userAutenticado.tipo}' e não pode acessar como '${this.perfilSelecionado}'.`,
+                        'error'
+                    );
+                    return;
+                }
+
+                this.usuarioLogado = userAutenticado;
+                this.limparPerfilSelecionado();
+                this.salvarPersistencia();
+                if (this.apiOnline) await this.sincronizarComApi(false);
+                this.ativarDashboard();
+                this.mostrarToast(`Bem-vindo(a), ${userAutenticado.nome}!`);
             }
 
             ativarDashboard() {

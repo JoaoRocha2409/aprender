@@ -44,10 +44,17 @@ app.MapPost("/api/login", async (LoginRequest req, DeskTiDbContext db) =>
 {
     var user = await db.Usuarios
         .FirstOrDefaultAsync(u => u.Email == req.Email && u.Senha == req.Senha);
-    
-    return user is not null 
-        ? Results.Ok(user) 
-        : Results.Unauthorized();
+
+    if (user is null)
+        return Results.Json(new { mensagem = "E-mail ou senha inválidos." }, statusCode: 401);
+
+    if (!string.IsNullOrEmpty(req.TipoEsperado) && user.Tipo != req.TipoEsperado)
+        return Results.Json(
+            new { mensagem = $"Esta conta pertence ao perfil '{user.Tipo}' e não pode acessar como '{req.TipoEsperado}'." },
+            statusCode: 403
+        );
+
+    return Results.Ok(user);
 });
 
 app.MapPost("/api/usuarios", async (Usuario novoUsuario, DeskTiDbContext db) =>
@@ -248,7 +255,7 @@ public class HistoricoRegistro
     public string Descricao { get; set; } = string.Empty;
 }
 
-public record LoginRequest(string Email, string Senha);
+public record LoginRequest(string Email, string Senha, string? TipoEsperado = null);
 public record NovoChamadoRequest(string Titulo, string Descricao, string Categoria, string Prioridade, int SolicitanteId);
 public record AtribuirTecnicoRequest(int TecnicoId);
 public record AtualizarAtendimentoRequest(string Status, string Solucao);
